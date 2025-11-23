@@ -1,59 +1,58 @@
 <!--
   SYNC IMPACT REPORT
-  Version Change: 1.9.0 → 1.9.1 (Updated branching strategy to GitHub Flow and standardized on Microsoft.FeatureManagement)
+  Version Change: 1.9.1 → 1.10.0 (Added Azure Well-Architected Framework alignment: Cost Optimization & enhanced Disaster Recovery)
 
-  Modified Principles:
-  - Principle VII (Security, Resilience & Observability): Added Feature Flags section with Microsoft.FeatureManagement
-  - Development Workflow: Changed branching strategy from GitFlow to GitHub Flow
+  NEW Principle:
+  - Principle VIII: Cost Optimization & Financial Management (MAJOR ADDITION - addresses critical gap in Azure Well-Architected Framework)
 
-  Changed Sections:
-  - Branching Strategy: Now requires GitHub Flow (simple, main-based workflow) instead of GitFlow/Trunk-based options
-    - Main branch always deployable
-    - Short-lived feature branches (<3 days)
-    - Deploy immediately from main or use feature flags for gradual rollout
-  - Feature Flags: Now standardized on Microsoft.FeatureManagement (removed "options" note)
-    - Configuration-based in appsettings.json
-    - Built-in filters (Percentage, TimeWindow, Targeting)
-    - Blazor support with <FeatureGate> component
-    - Integration with Azure App Configuration optional
-    - Best practices for flag lifecycle management
-  - Graceful Degradation: Updated to reference Microsoft.FeatureManagement
-  - Deployment Strategies: Updated to reference Microsoft.FeatureManagement for gradual rollouts
-  - Rationale: Added feature flags benefit
+  Enhanced Principles:
+  - Principle VII (Security, Resilience & Observability): Added comprehensive Disaster Recovery & Business Continuity section
 
-  Removed Sections:
-  - "Note on Feature Flags" with alternative options (Unleash, Flagsmith, custom)
+  New Sections in Principle VIII - Cost Optimization:
+  - Azure Cost Management & Monitoring: Budgets, alerts, cost allocation tags, anomaly detection, showback/chargeback, analysis cadence (weekly/monthly/quarterly/yearly)
+  - Resource Right-Sizing: App Service plans, Azure Container Apps (CPU/memory limits), Azure Functions, database sizing (Azure SQL serverless, Cosmos DB autoscale), container resource limits in Aspire
+  - Auto-Scaling Strategy: Cost-aware horizontal scaling, scaling rules (scale out/in thresholds), scheduled scaling for dev/test, Aspire replica configuration
+  - Reserved Capacity & Commitments: When to use RIs (1-year/3-year), cost savings (20-60%), utilization tracking (>90% target), services eligible (SQL, Cosmos DB, App Service, Redis)
+  - Development & Non-Production Cost Controls: Auto-shutdown policies (6 PM-8 AM weekdays, off weekends), lower-tier services, shared resources, ephemeral PR environments, Azure DevTest Labs
+  - Storage Optimization: Blob storage tiers (hot/cool/archive), lifecycle management automation, compression (70-90% savings), deduplication, database storage monitoring
+  - Serverless vs Always-On Decision Matrix: When to use Azure Functions (event-driven, <100 req/min, <5 min execution) vs App Service/Container Apps (consistent traffic, low latency, stateful)
+  - Data Transfer & Network Costs: Cross-region transfer minimization, CDN usage for static assets, API Gateway/Front Door cost-benefit evaluation, inbound free/outbound charged
+  - Observability Cost Management: Application Insights adaptive sampling (5 items/sec, 80-95% cost savings), log levels (Information+ in production), Serilog sink strategy, OpenTelemetry trace sampling (10-20%)
+  - Cost Optimization Checklist: Monthly review checklist (10 items), cost gates in CI/CD (estimate required for PRs adding Azure resources, cost impact documentation, tech lead approval)
 
-  Previous Additions (from v1.9.0):
-  - Principle II (Code Quality & Standards): Added Data Access & Entity Framework Core best practices
-  - Principle IV (User Experience Consistency): Added Accessibility, API Design, i18n/l10n, Caching, Error Handling
-  - NEW Principle VII: Security, Resilience & Observability
-  - CI/CD & DevOps Practices in Development Workflow
-  - Data Access & EF Core (Principle II):
-    - DbContext lifecycle, NoTracking, Projection, Eager Loading, Compiled Queries, Pagination, Migrations, Connection Resiliency, Indexing, Repository Pattern, Unit of Work, Query Performance
-  - Accessibility (WCAG 2.1 AA) in UX Consistency:
-    - Semantic HTML, ARIA labels, Keyboard Navigation, Screen Reader Support, Color Contrast, Focus Management, Testing tools
-  - API Design Standards in UX Consistency:
-    - Resource naming, HTTP verbs, Status codes, Versioning, Pagination, Filtering/Sorting, Problem Details (RFC 7807), OpenAPI/Swagger, Rate Limiting, CORS
-  - Internationalization & Localization in UX Consistency:
-    - Resource files (.resx), IStringLocalizer, Culture handling, UTC storage, RTL support, Number formatting
-  - Caching Strategy in UX Consistency:
-    - Distributed caching (Redis), Output caching, Response caching, Cache-aside pattern, Cache invalidation, Blazor caching, CDN caching
-  - Error Handling & User Feedback in UX Consistency:
-    - Global exception handling, Client error handling, Error correlation, User-friendly messages, Validation errors, Retry guidance, Error logging
-  - CI/CD & DevOps Practices in Development Workflow:
-    - Branching Strategy (Trunk-based vs GitFlow), PR Requirements (size, turnaround, approval), Deployment Strategies (blue-green, canary, rolling), Infrastructure as Code (Bicep/ARM, Aspire AppHost), Environment Management, Rollback Procedures, Deployment Checklist
+  New Sections in Principle VII - Disaster Recovery & Business Continuity:
+  - Recovery Objectives: RPO ≤15 minutes (production databases), RTO ≤1 hour (critical services), MTTR ≤30 minutes targets
+  - Backup Strategy:
+    - Database backups (automated daily, PITR 7-35 days, long-term retention: weekly 3 months/monthly 1 year/annual 7 years, encrypted, quarterly restore testing)
+    - Application state (IaC in source control, Key Vault metadata backup, Container Registry geo-replication)
+    - Blob storage (soft delete 14-day, versioning, GRS/GZRS/RA-GRS)
+  - Multi-Region Deployment: Active-passive (manual/automatic failover), active-active (Azure Front Door/Traffic Manager, multi-region writes for Cosmos DB), database geo-replication, quarterly failover testing, data consistency strategies
+  - Business Continuity Plan: Incident response team roles (incident commander, technical lead, communications), runbooks for common failures (database, region outage, security breach), communication plan, quarterly DR drills, blameless postmortems
+  - Data Retention & Compliance: GDPR/CCPA compliance (right to erasure, data portability, consent management), retention policies per data type, audit logs (1 year minimum, immutable storage), legal hold procedures
 
-  Removed Sections:
-  - "Note on Feature Flags" (consolidated into required Feature Flags section)
+  Rationale Updates:
+  - Principle VII: Added disaster recovery rationale (business continuity, data protection, comprehensive backup strategies protect against data loss and extended downtime)
+  - Principle VIII: Cloud costs can spiral without active management; cost optimization maximizes business value through right-sizing, waste elimination, reserved capacity, monitoring; Aspire's container architecture enables granular resource allocation and scale-to-zero; uncontrolled costs threaten project viability
+
+  Azure Well-Architected Framework Alignment:
+  - ✅ Security: Already comprehensive (Principle VII)
+  - ✅ Reliability: Already comprehensive (Principle VII - Resilience & DR)
+  - ✅ Performance Efficiency: Already comprehensive (Principle V)
+  - ✅ Operational Excellence: Already comprehensive (Principle VII - Observability, CI/CD)
+  - ✅ Cost Optimization: NOW COMPREHENSIVE (NEW Principle VIII)
+  - ✅ Disaster Recovery: NOW COMPREHENSIVE (Enhanced Principle VII)
+
+  Previous Additions (from v1.9.0-1.9.1):
+  - v1.9.0: Principle VII (Security, Resilience & Observability), EF Core best practices, Accessibility, API Design, i18n/l10n, Caching, Error Handling, CI/CD practices
+  - v1.9.1: GitHub Flow branching strategy, Microsoft.FeatureManagement standardization
 
   Templates Status:
-  - ✅ plan-template.md: Constitution Check now includes GitHub Flow branching, feature flags with Microsoft.FeatureManagement
-  - ✅ spec-template.md: User scenarios include feature flag considerations for gradual rollouts
-  - ✅ tasks-template.md: Implementation tasks include feature flag setup, GitHub Flow workflow
-  - ℹ️ All templates: GitHub Flow is the required branching strategy; feature flags using Microsoft.FeatureManagement
+  - ⚠️ plan-template.md: Constitution Check should include Cost Optimization considerations (budgets, right-sizing, cost estimates for Azure resources)
+  - ⚠️ spec-template.md: Architectural Concerns should include cost implications and disaster recovery requirements
+  - ⚠️ tasks-template.md: Implementation tasks should include cost monitoring setup, backup configuration, DR testing
+  - ℹ️ All templates: Azure Well-Architected Framework now fully covered (all 5 pillars + DR)
 
-  Follow-up TODOs:
+  Follow-up TODOs (Observability & Security from v1.9.0-1.9.1):
   - Configure Serilog in all projects with Application Insights sink
   - Set up OpenTelemetry exporters for Aspire dashboard
   - Implement Polly policies for HTTP clients and database access
@@ -66,7 +65,31 @@
   - Configure FeatureManagement section in appsettings.json
   - Document GitHub Flow workflow and PR process for team
   - Set up branch protection rules requiring PR approval and linear history
-  - Create deployment runbook with rollback procedures
+
+  Follow-up TODOs (Cost Optimization - NEW from v1.10.0):
+  - Enable Azure Cost Management for all subscriptions; configure cost analysis dashboards
+  - Set budgets per environment (dev, staging, production) with alerts at 50%, 75%, 90%, 100% thresholds
+  - Implement cost allocation tags (Environment, Owner, CostCenter, Project); enforce via Azure Policy
+  - Configure auto-shutdown for dev/test environments (6 PM-8 AM weekdays; off weekends)
+  - Review and implement Azure Advisor cost recommendations weekly
+  - Set up container resource limits in Aspire AppHost (CPU/memory requests and limits)
+  - Configure Application Insights adaptive sampling (5 items/sec default)
+  - Implement blob storage lifecycle management (Hot → Cool after 30 days, Cool → Archive after 90 days)
+  - Document serverless vs always-on decision criteria for team
+  - Add cost estimation requirement to PR template for infrastructure changes
+  - Schedule monthly cost review meetings with team
+
+  Follow-up TODOs (Disaster Recovery - NEW from v1.10.0):
+  - Configure automated daily database backups with PITR enabled (7-35 days retention)
+  - Set up long-term backup retention (weekly: 3 months, monthly: 1 year, annual: 7 years)
+  - Enable blob storage soft delete (14-day retention) and versioning for critical data
+  - Configure geo-redundant storage (GRS/GZRS) for production databases and critical blobs
+  - Document RPO/RTO targets per service in architecture documentation
+  - Create disaster recovery runbooks for common failure scenarios (database failure, region outage, security breach)
+  - Schedule quarterly DR drills; test database restores, regional failover, backup integrity
+  - Set up incident response team with defined roles (incident commander, technical lead, communications)
+  - Implement audit log retention (1 year minimum, immutable storage) in Azure Monitor/Log Analytics
+  - Document and test multi-region failover procedures (if applicable for critical systems)
 
   Date: 2025-11-22
 -->
@@ -588,6 +611,49 @@ Scenario Outline: Password validation
 - **Distributed Transactions**: Use saga pattern with compensation logic
 - **Database Constraints**: Unique indexes to prevent duplicates
 
+#### Disaster Recovery & Business Continuity
+
+**Recovery Objectives**:
+- **RPO (Recovery Point Objective)**: Maximum acceptable data loss measured in time; **Target: ≤15 minutes** for production databases; ≤1 hour for non-critical data
+- **RTO (Recovery Time Objective)**: Maximum acceptable downtime; **Target: ≤1 hour** for critical services; ≤4 hours for non-critical services
+- **MTTR (Mean Time To Recovery)**: Average time to restore service after incident; track and optimize; **Target: ≤30 minutes**
+
+**Backup Strategy**:
+- **Database Backups**:
+  - **Automated Daily Backups**: Full backup daily during off-peak hours; automated via Azure SQL Database or Cosmos DB built-in backup
+  - **Point-in-Time Restore**: Enable PITR for last 7-35 days (configurable based on compliance requirements)
+  - **Long-Term Retention**: Weekly backups retained for 3 months; monthly backups for 1 year; annual backups for 7 years (compliance-dependent)
+  - **Backup Encryption**: All backups encrypted at rest; use Azure Storage encryption or Transparent Data Encryption
+  - **Backup Testing**: Restore test quarterly; validate data integrity; document restore procedures
+- **Application State & Configuration**:
+  - **Infrastructure as Code**: Bicep/ARM templates in source control; can recreate infrastructure from code
+  - **Configuration Backup**: Export Key Vault secrets metadata (not values); backup App Configuration store
+  - **Container Images**: Store in Azure Container Registry with geo-replication; tag images for versioning
+- **Blob Storage & Files**:
+  - **Soft Delete**: Enable soft delete (14-day retention) for accidental deletion protection
+  - **Versioning**: Enable blob versioning for critical data
+  - **Geo-Redundant Storage**: Use GRS or GZRS for critical data; read-access geo-redundant (RA-GRS) for high availability
+
+**Multi-Region Deployment** (for critical production systems):
+- **Active-Passive**: Primary region handles traffic; secondary region on standby; failover manual or automatic based on health checks
+- **Active-Active**: Traffic distributed across multiple regions; Azure Front Door or Traffic Manager for global load balancing; requires data synchronization strategy
+- **Database Replication**: Azure SQL geo-replication (readable secondary); Cosmos DB multi-region writes for active-active
+- **Failover Testing**: Test regional failover quarterly; document failover runbook; automate where possible
+- **Data Consistency**: Eventual consistency acceptable for active-active; strong consistency for active-passive
+
+**Business Continuity Plan**:
+- **Incident Response Team**: Define roles (incident commander, technical lead, communications); on-call rotation
+- **Runbooks**: Document procedures for common failure scenarios (database failure, region outage, security breach)
+- **Communication Plan**: Stakeholder notification procedures; status page updates; escalation paths
+- **DR Drills**: Conduct disaster recovery drills quarterly; simulate regional failures, data corruption, security incidents
+- **Post-Incident Review**: Conduct blameless postmortems; document lessons learned; update runbooks
+
+**Data Retention & Compliance**:
+- **GDPR/CCPA Compliance**: Right to erasure (delete user data on request); data portability; consent management
+- **Retention Policies**: Define data retention per data type; automate purging of expired data
+- **Audit Logs**: Retain audit logs for 1 year minimum; immutable storage for compliance; centralize in Azure Monitor/Log Analytics
+- **Legal Hold**: Ability to preserve data for legal/regulatory requirements; document legal hold procedures
+
 #### Configuration Management
 
 **appsettings.json Patterns**:
@@ -650,7 +716,187 @@ Scenario Outline: Password validation
 - **Azure App Configuration**: Optionally manage flags centrally; update without redeployment
 - **Best Practices**: Remove flags after feature is stable; avoid flag sprawl; document flag lifecycle
 
-**Rationale**: Security protects user data and system integrity; resilience ensures system availability under failure; observability enables rapid issue detection and resolution. Together, these form the foundation of production-ready systems. Serilog provides structured logging essential for diagnosing distributed systems. OpenTelemetry enables end-to-end request tracing across Aspire microservices. Polly resilience policies prevent cascading failures and improve user experience during partial outages. Feature flags enable safe, gradual rollouts and decouple deployment from release.
+**Rationale**: Security protects user data and system integrity; resilience ensures system availability under failure; observability enables rapid issue detection and resolution; disaster recovery ensures business continuity and data protection. Together, these form the foundation of production-ready systems. Serilog provides structured logging essential for diagnosing distributed systems. OpenTelemetry enables end-to-end request tracing across Aspire microservices. Polly resilience policies prevent cascading failures and improve user experience during partial outages. Feature flags enable safe, gradual rollouts and decouple deployment from release. Comprehensive backup and DR strategies protect against data loss and extended downtime.
+
+### VIII. Cost Optimization & Financial Management
+
+**Cloud costs MUST be actively managed, monitored, and optimized to maximize value:**
+
+#### Azure Cost Management & Monitoring
+
+**Cost Visibility**:
+- **Azure Cost Management**: Enable for all subscriptions; configure cost analysis dashboards; review monthly spending trends
+- **Budgets & Alerts**: Set budgets per environment (dev, staging, production); configure alerts at 50%, 75%, 90%, 100% thresholds
+- **Cost Allocation Tags**: Tag all resources with `Environment`, `Owner`, `CostCenter`, `Project`; enforce via Azure Policy
+- **Anomaly Detection**: Enable Azure Cost Management anomaly alerts; investigate unexpected spending spikes within 24 hours
+- **Showback/Chargeback**: Generate cost reports per team/project using tags; share with stakeholders monthly
+
+**Cost Analysis Cadence**:
+- **Weekly**: Review top 10 cost drivers; identify optimization opportunities
+- **Monthly**: Comprehensive cost review with team; evaluate against budget; forecast next month
+- **Quarterly**: Review reserved capacity utilization; evaluate commitment renewals
+- **Yearly**: Strategic cost planning; evaluate architectural changes for cost efficiency
+
+#### Resource Right-Sizing
+
+**Compute Resources**:
+- **App Service Plans**: Start with Basic tier for dev/test; Standard (S1-S3) for production; Premium only if advanced features required (VNet integration, slots); avoid over-provisioning
+- **Azure Container Apps** (for Aspire): Set resource limits per container (CPU: 0.25-2.0 cores, Memory: 0.5-4.0 GB); monitor actual usage and adjust; use consumption plan for variable workloads
+- **Azure Functions**: Consumption plan default for event-driven workloads; Premium plan only for VNet integration or long-running functions (>5 min); monitor execution time and optimize
+- **Database Sizing**:
+  - **Azure SQL**: Start with Basic/S0 for dev; S1-S3 for production; use serverless for variable workloads (auto-pause after 1 hour idle)
+  - **Cosmos DB**: Serverless for <1M RU/month; provisioned throughput for predictable workloads; autoscale for variable demand
+- **Container Resource Limits**: Define CPU/memory requests and limits in Aspire AppHost; prevent over-allocation; monitor actual usage with Container Insights
+
+**Monitoring & Optimization**:
+- **Azure Advisor Cost Recommendations**: Review weekly; implement high-impact recommendations
+- **Resize Underutilized Resources**: If CPU <20% for 7 days, consider downsizing; if memory <30%, reduce allocation
+- **Eliminate Idle Resources**: Delete stopped VMs, unused App Service plans, orphaned disks, old snapshots
+
+#### Auto-Scaling Strategy
+
+**Cost-Aware Scaling**:
+- **Horizontal Scaling**: Scale out for traffic spikes; scale in during low usage; configure scale-in delay (5-10 min) to avoid thrashing
+- **Scaling Rules**:
+  - **Scale Out**: When CPU >70% or Memory >80% for 5 minutes
+  - **Scale In**: When CPU <30% and Memory <40% for 10 minutes
+  - **Min/Max Instances**: Dev: 1-2, Staging: 1-3, Production: 2-10 (adjust based on load)
+- **Scheduled Scaling**: Scale down non-production environments during nights/weekends; scale up before business hours
+- **Aspire Scaling**: Configure replica counts in AppHost; use Kubernetes HPA for container auto-scaling
+
+**Scaling Metrics**:
+- Monitor cost per request/transaction; optimize if cost increases without proportional value
+- Track scaling efficiency: avoid frequent scale-out/scale-in cycles (thrashing)
+
+#### Reserved Capacity & Commitments
+
+**When to Use Reserved Instances**:
+- **Predictable Workloads**: If resource runs 24/7 for production, consider 1-year or 3-year reservations
+- **Cost Savings**: 1-year RI saves 20-40%; 3-year RI saves 40-60% vs pay-as-you-go
+- **Services Eligible**: Azure SQL Database, Cosmos DB, App Service, VMs, Azure Cache for Redis
+
+**Commitment Management**:
+- **Analyze Utilization**: Use Azure Advisor to identify RI opportunities; requires 80%+ consistent usage
+- **Start with 1-Year**: Test with 1-year commitment before 3-year; avoid over-commitment for evolving workloads
+- **Reserved Capacity for Databases**: Reserve DTUs/vCores for production databases running continuously
+- **Track Utilization**: Monitor RI utilization monthly; aim for >90% utilization; exchange or adjust if <70%
+
+**Avoid Reservations For**:
+- Development/test environments (variable usage)
+- New projects with uncertain load patterns
+- Workloads that can use spot instances or serverless
+
+#### Development & Non-Production Cost Controls
+
+**Environment Policies**:
+- **Auto-Shutdown**:
+  - **Dev Environments**: Shut down at 6 PM, start at 8 AM weekdays; completely off weekends
+  - **Staging**: Shut down nights if not used for testing; on-demand startup
+  - **Use Azure DevTest Labs** or automation scripts for scheduled shutdown/startup
+- **Lower-Tier Services**:
+  - **Databases**: Basic or S0 tier for dev/test; never Premium
+  - **App Service**: Basic B1 for dev; Standard S1 for staging
+  - **Redis Cache**: Basic C0 for dev; Standard C1 for staging
+- **Shared Dev Resources**: Use shared App Service Plan for multiple dev apps; shared database server with multiple databases
+- **Ephemeral Environments**: PR-based preview environments auto-delete after 7 days or on PR close; use Azure Container Apps for cheap ephemeral environments
+
+**Developer Practices**:
+- **Local Development**: Use Aspire for local orchestration; minimize cloud resource usage during development
+- **Lightweight Emulators**: Use Azurite for Azure Storage, Cosmos DB emulator, SQL Server LocalDB for local dev
+- **Resource Cleanup**: Delete unused resource groups weekly; tag with expiration dates
+
+#### Storage Optimization
+
+**Blob Storage Tiers**:
+- **Hot Tier**: Frequently accessed data (accessed >1/month); user uploads, active documents
+- **Cool Tier**: Infrequently accessed (accessed <1/month, stored >30 days); backups, archives; 50% cheaper than Hot
+- **Archive Tier**: Rarely accessed (accessed <1/year, stored >180 days); long-term backups, compliance archives; 90% cheaper than Hot
+- **Lifecycle Management**: Automate tier transitions (Hot → Cool after 30 days, Cool → Archive after 90 days); delete after retention period
+
+**Storage Best Practices**:
+- **Compression**: Compress large blobs before upload (gzip, brotli); can save 70-90% for text/JSON
+- **Deduplication**: Avoid storing duplicate files; use content hashing
+- **Delete Old Data**: Implement data retention policies; auto-delete expired logs, temporary files, old backups
+- **Block Blob vs Page Blob**: Use block blobs for most scenarios (cheaper); page blobs only for VHDs
+
+**Database Storage**:
+- **Azure SQL Storage**: Monitor storage usage; scale down if <50% utilized; use elastic pools for multiple databases
+- **Cosmos DB Storage**: Monitor document size; avoid storing large blobs in documents (use Blob Storage); clean up deleted items (tombstones)
+
+#### Serverless vs Always-On Decision Matrix
+
+**Use Azure Functions (Serverless) When**:
+- Event-driven processing (queue messages, HTTP webhooks, timers)
+- Variable/unpredictable load (<100 requests/minute)
+- Short execution time (<5 minutes)
+- Willing to accept cold start latency (1-3 seconds)
+- Cost priority: Pay only for execution time
+
+**Use App Service/Container Apps (Always-On) When**:
+- Consistent traffic (>100 requests/minute sustained)
+- Low latency requirement (no cold starts)
+- Long-running processes or stateful apps
+- WebSocket or SignalR workloads (Blazor Server)
+- Predictability priority: Consistent performance
+
+**Aspire with Azure Container Apps**:
+- **Consumption Plan**: Pay per request; ideal for variable workloads; supports scale-to-zero
+- **Dedicated Plan**: Fixed cost; better for predictable workloads; faster cold starts
+
+#### Data Transfer & Network Costs
+
+**Minimize Cross-Region Transfer**:
+- **Co-locate Resources**: Deploy services in same region as database; avoid cross-region queries
+- **Inbound Traffic**: Free (data coming into Azure)
+- **Outbound Traffic**: Charged (data leaving Azure); first 100 GB/month free, then tiered pricing
+- **Cross-Region Replication**: Only for DR; avoid unnecessary geo-replication
+
+**CDN Usage**:
+- **Static Assets**: Serve images, CSS, JS from Azure CDN; cheaper than App Service bandwidth for high traffic
+- **CDN Pricing**: CDN egress cheaper than compute egress for >1 TB/month traffic
+- **Optimize Images**: Compress images (WebP format); use responsive images; lazy loading
+
+**API Gateway/Front Door**:
+- Use Azure Front Door for global load balancing; cache at edge to reduce backend calls
+- Evaluate cost vs benefit: Front Door adds cost but reduces backend compute and bandwidth
+
+#### Observability Cost Management
+
+**Telemetry Volume Control**:
+- **Application Insights Sampling**: Enable adaptive sampling (default 5 items/sec); increase only if needed; can save 80-95% of costs
+- **Log Levels**: Production logging at Information level or higher; avoid Debug logs in production
+- **Custom Metrics**: Limit to business-critical metrics; avoid high-cardinality dimensions (user IDs)
+- **Retention**: Default 90 days; archive older logs to cheaper storage (Blob Storage) if needed for compliance
+
+**Serilog Sinks**:
+- **Development**: Console sink only (free)
+- **Production**: Application Insights with sampling; Seq for detailed debugging (self-hosted, one-time cost)
+- **Avoid**: Excessive structured properties; trim unnecessary data before logging
+
+**OpenTelemetry**:
+- **Trace Sampling**: Sample 10-20% of traces in production; 100% for errors
+- **Span Limits**: Limit spans per trace to avoid excessive telemetry costs
+
+#### Cost Optimization Checklist
+
+**Monthly Review** (required for all projects):
+- [ ] Review Azure Cost Management dashboard; identify top 5 cost drivers
+- [ ] Check budget alerts; investigate any overages
+- [ ] Review Azure Advisor cost recommendations; implement high-impact items
+- [ ] Verify auto-shutdown working for dev/test environments
+- [ ] Check for orphaned resources (unattached disks, unused IPs, old snapshots)
+- [ ] Review storage account usage; transition blobs to cooler tiers if applicable
+- [ ] Monitor reserved instance utilization; >90% target
+- [ ] Review App Service plan utilization; consolidate if <50% CPU
+- [ ] Check database DTU/RU utilization; resize if over/under provisioned
+- [ ] Review Application Insights ingestion volume; adjust sampling if excessive
+
+**Cost Gates in CI/CD**:
+- PRs adding new Azure resources MUST include cost estimate (Azure Pricing Calculator)
+- Infrastructure changes MUST document cost impact (increase/decrease/neutral)
+- Cost-increasing changes require justification and approval from tech lead
+
+**Rationale**: Cloud costs can spiral without active management. Cost optimization isn't about being cheap—it's about spending wisely to maximize business value. Right-sizing resources, eliminating waste, leveraging reserved capacity, and monitoring spending ensures sustainable growth. Aspire's container-based architecture provides flexibility to optimize costs through granular resource allocation and scale-to-zero capabilities. Uncontrolled costs can threaten project viability; proactive cost management is a core engineering responsibility.
 
 ## Testing Standards
 
@@ -871,4 +1117,4 @@ Pipeline Stages:
 - **Template Guidance**: Embedded comments in `.specify/templates/` provide workflow instructions
 - **This Constitution**: Defines non-negotiable principles and quality standards across all development
 
-**Version**: 1.9.1 | **Ratified**: 2025-11-22 | **Last Amended**: 2025-11-22
+**Version**: 1.10.0 | **Ratified**: 2025-11-22 | **Last Amended**: 2025-11-22
