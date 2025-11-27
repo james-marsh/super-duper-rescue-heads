@@ -1,0 +1,6 @@
+@SuperDuperRescueHeads.Api_HostAddress = http://localhost:5262
+
+GET {{SuperDuperRescueHeads.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
