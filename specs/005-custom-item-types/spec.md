@@ -1,155 +1,312 @@
 # Feature Specification: Custom Item Types
 
-**Feature Branch**: `005-custom-item-types`
-**Created**: 2025-11-23
+**Feature ID**: 005-custom-item-types
+**Created**: 2025-11-28
 **Status**: Draft
+**Dependencies**: Feature 001 (Collection Management), Feature 002 (Item Management)
 
 ## Overview
 
-This feature enables users to create custom item types with user-defined attributes to track collections that don't fit predefined types. Includes an admin approval workflow to make custom types globally available while allowing immediate private use by creators.
+Allow users to define custom item types with flexible attribute schemas beyond the built-in types (Vinyl, Comic, Puzzle). Users can create reusable type templates that define which attributes are required or optional, with data type validation and constraints. This enables collectors to organize diverse items (coins, stamps, watches, vintage cameras, etc.) with type-specific metadata.
 
-**Scope**: This feature handles custom item type creation, attribute definition, admin review workflow, and type management.
+## User Scenarios & Testing
 
-**Dependencies**:
-- Feature 001: Core Collection Management (collections use item types)
-- Feature 002: Basic Item Management (items are structured by types)
+### Primary User Flow
 
-**Related Features**:
-- Feature 004: Search Functionality (custom attributes must be searchable)
+**Scenario 1: Collector creates custom "Vintage Watch" type**
+1. User navigates to "Manage Item Types" section
+2. Clicks "Create Custom Type"
+3. Enters type name "Vintage Watch"
+4. Defines attributes:
+   - Manufacturer (text, required)
+   - Model Number (text, required)
+   - Movement Type (choice: Automatic/Manual/Quartz, required)
+   - Case Material (choice: Gold/Silver/Steel/Titanium, optional)
+   - Diameter (number in mm, optional)
+   - Production Year (number 1800-2024, optional)
+5. Saves the custom type
+6. Creates new item using "Vintage Watch" type
+7. System validates required attributes (Manufacturer, Model Number, Movement Type)
+8. Item is saved with type-specific structure
 
-## Clarifications
+**Expected outcome**: User can consistently catalog watches with standardized attributes across their collection
 
-### Session 2025-11-23
+**Scenario 2: User edits existing custom type (non-destructive)**
+1. User has 15 "Coin" items using custom "Coin" type
+2. User edits "Coin" type to add optional "Mint Mark" attribute
+3. System updates type schema without affecting existing items
+4. Existing coins remain valid (new attribute is optional)
+5. New coins can include "Mint Mark" data
 
-- Q: Who can create new item types? → A: Users can create custom item types with admin oversight (users define types, admins can review/approve or provide templates)
-- Users can use their own custom types immediately without approval (private to user)
-- Admin-approved types become available globally to all users
-- Admins can provide template types that users can customize
+**Expected outcome**: Type evolution doesn't break existing items
 
-## User Scenarios & Testing *(mandatory)*
+**Scenario 3: User attempts to delete type with items**
+1. User has 20 items using "Stamp" custom type
+2. User attempts to delete "Stamp" type
+3. System prevents deletion with message: "Cannot delete type 'Stamp' - 20 items are using this type"
+4. User must reassign or delete items first
 
-### User Story 1 - Create Custom Item Type (Priority: P5)
-
-A user wants to create a custom item type with specific attributes to track items that don't fit predefined types (e.g., trading cards, board games, stamps).
-
-**Why this priority**: Enables users to track any collection without waiting for admin support. Critical for user autonomy and system flexibility, but not blocking since predefined types cover common use cases initially.
-
-**Independent Test**: Can be tested by creating a custom item type with custom attributes, creating a collection using that type, and adding items with the custom attributes.
-
-**Acceptance Scenarios**:
-
-1. **Given** a user wants to track items not covered by predefined types, **When** they create a custom item type named "Trading Cards" with attributes (card name, year, rarity, condition), **Then** the item type is created and available for use immediately
-2. **Given** a user is creating a custom item type, **When** they specify required vs optional attributes, **Then** the system enforces those requirements when items are added to collections of that type
-3. **Given** a user creates a custom item type, **When** the type is saved, **Then** it appears in the user's available types list with "private" indicator
-4. **Given** a user has created a custom item type, **When** they create a collection using that type, **Then** the collection accepts items with the custom attributes defined
-5. **Given** a user creates a custom item type with duplicate name, **When** they attempt to save it, **Then** the system prompts them to choose a unique name or use the existing type
-
----
-
-### User Story 2 - Admin Review and Approval Workflow
-
-An admin wants to review user-created custom item types and approve them for global use by all users.
-
-**Why this priority**: Ensures quality and prevents duplicate types while allowing users immediate access to their own types.
-
-**Independent Test**: Can be tested by creating custom types as a user, reviewing them as admin, approving/rejecting, and verifying global availability.
-
-**Acceptance Scenarios**:
-
-1. **Given** a user creates a custom item type, **When** an admin reviews pending item types, **Then** the admin can see the custom type with all its attributes and metadata
-2. **Given** an admin is reviewing a custom type, **When** they approve it, **Then** the type becomes globally available to all users
-3. **Given** an admin is reviewing a custom type, **When** they reject it with feedback, **Then** the creator receives notification with rejection reason
-4. **Given** an admin is reviewing a custom type, **When** they suggest modifications, **Then** the creator can update the type and resubmit for review
-5. **Given** a custom item type is approved by admin, **When** other users search for item types, **Then** the approved custom type appears in the available types list
-6. **Given** an admin wants to provide templates, **When** they create a template item type, **Then** users can customize it for their needs
-
----
-
-### User Story 3 - Manage Custom Attribute Definitions
-
-A user wants to define detailed attribute specifications for their custom item type including data type, required/optional status, and default values.
-
-**Why this priority**: Provides flexibility in defining how items are structured while maintaining data integrity.
-
-**Independent Test**: Can be tested by creating attribute definitions with various properties and verifying they're enforced when items are created.
-
-**Acceptance Scenarios**:
-
-1. **Given** a user is defining a custom attribute, **When** they specify the data type (text, number, date, boolean), **Then** the system enforces that data type for items
-2. **Given** a user is defining a custom attribute, **When** they mark it as required, **Then** the system prevents item creation without that attribute
-3. **Given** a user is defining a custom attribute, **When** they provide a default value, **Then** new items are pre-filled with that value
-4. **Given** a user has created a custom type, **When** they want to add new attributes later, **Then** existing items of that type remain valid (new attributes are optional or have defaults)
-
----
+**Expected outcome**: Data integrity maintained through referential constraints
 
 ### Edge Cases
 
-- What happens when a custom item type needs new attributes added in the future (extensibility through flexible schema)?
-- What happens when admins approve a custom type that conflicts with an existing type?
-- What happens when a user deletes a custom item type that's being used by collections?
-- What happens when an admin rejects a custom type that's already in use by the creator?
-- What happens to collections when a custom item type is modified?
-- What happens when two users create custom types with identical attributes but different names?
-- What happens when a user wants to share a collection using a private custom type (Feature 006)?
-- What happens when an approved custom type is later found to have issues?
+1. **Empty type name**: System rejects with "Type name is required"
+2. **Duplicate type name**: System rejects with "Type name 'Vinyl' already exists"
+3. **Maximum types limit**: User with 50 custom types cannot create more (shows "Maximum 50 custom types reached")
+4. **Maximum attributes limit**: User cannot add 31st attribute (shows "Maximum 30 attributes per type")
+5. **Invalid attribute constraints**:
+   - Number range min > max → "Minimum value cannot exceed maximum"
+   - Text max length < 1 → "Maximum length must be at least 1"
+6. **Type with no attributes**: Allowed (uses only built-in Item fields)
+7. **Attribute name conflicts**: System rejects duplicate attribute names within same type
 
-## Requirements *(mandatory)*
+## Functional Requirements
 
-### Functional Requirements
+### FR1: Custom Type Management
 
-- **FR-042**: System MUST allow users to create custom item types with user-defined attributes
-- **FR-043**: System MUST allow users to specify attribute properties for custom item types (name, data type, required/optional, default value)
-- **FR-044**: System MUST support admin review and approval workflow for custom item types before they become globally available
-- **FR-045**: System MUST allow users to use their own custom item types immediately without admin approval (private to user until approved)
-- **FR-046**: System MUST allow admins to provide template item types that users can customize
-- **FR-047**: System MUST prevent duplicate item type names across the system (case-insensitive uniqueness)
-- **FR-048**: System MUST maintain backward compatibility when item types are modified (existing collections continue to work)
-- **FR-065**: System MUST support attribute data types: text, number, date, boolean, and list (select from predefined options)
-- **FR-066**: System MUST allow users to edit their private custom types before admin approval
-- **FR-067**: System MUST prevent deletion of item types that are in use by existing collections
-- **FR-068**: System MUST track custom item type creator, creation date, and approval status
-- **FR-069**: System MUST distinguish between system-provided types, approved custom types, and private custom types in the UI
+**Must Have:**
+- Users can create custom item types with unique names (2-50 characters)
+- Users can edit custom type names and descriptions
+- Users can archive custom types (soft delete) if no items reference them
+- Users can permanently delete archived types after 30 days
+- System enforces maximum 50 custom types per user
+- Type names must be unique within user's scope
+- Built-in types (Vinyl, Comic, Puzzle) cannot be modified or deleted
 
-### Key Entities
+**Acceptance Criteria:**
+- Creating duplicate type name shows error before save
+- Archived types don't appear in item creation dropdowns
+- Attempting to delete type with items shows count and prevents deletion
+- Type list shows usage count (number of items using each type)
 
-- **Item Type**: Defines the category of items a collection contains. Can be system-provided (e.g., "Comic Book", "Puzzle", "Vinyl Record") or user-created custom types. Contains attribute definitions (name, data type, required/optional, default value), approval status (private/pending/approved for global use), creator reference, and template indicator. Acts as a template for item structure. Custom types are private to creator until admin-approved for global availability.
-- **Attribute Definition**: Defines a single attribute for an item type. Contains attribute name, data type (text, number, date, boolean, list), required/optional flag, default value (optional), validation rules, and display order.
-- **Item Type Template**: An admin-provided template that users can customize. Contains base attribute definitions and recommended structure.
-- **Approval Request**: Represents a pending review for a custom item type. Contains item type reference, creator, submission date, status (pending/approved/rejected), admin reviewer, review date, and feedback/notes.
+### FR2: Attribute Schema Definition
 
-## Success Criteria *(mandatory)*
+**Must Have:**
+- Each custom type can define 0-30 custom attributes
+- Each attribute has:
+  - Name (2-50 characters, unique within type)
+  - Data type (Text, Number, Date, Choice, Boolean)
+  - Required/Optional flag
+  - Validation constraints (min/max length, min/max value, allowed choices)
+  - Help text (0-200 characters, optional)
+- Text attributes:
+  - Minimum length 0-1000
+  - Maximum length 1-1000
+  - Default value (optional)
+- Number attributes:
+  - Minimum value (optional)
+  - Maximum value (optional)
+  - Decimal places (0-4)
+  - Default value (optional)
+- Date attributes:
+  - Minimum date (optional)
+  - Maximum date (optional)
+  - Default to today (boolean)
+- Choice attributes:
+  - 2-50 choices
+  - Each choice 1-100 characters
+  - Allow multiple selections (boolean)
+- Boolean attributes:
+  - Default value (true/false/null)
 
-### Measurable Outcomes
+**Acceptance Criteria:**
+- Invalid constraints (min > max) are rejected with clear error messages
+- Choice lists with <2 or >50 choices are rejected
+- Attribute names are case-insensitive unique within type
+- Changes to required/optional don't break existing items
 
-- **SC-031**: Users can create a custom item type with 5 attributes in under 5 minutes
-- **SC-032**: Custom item types are immediately available for private use upon creation
-- **SC-033**: Admins can review and approve/reject custom types in under 2 minutes per type
-- **SC-034**: Approved custom types appear in global type list within 5 seconds of approval
-- **SC-035**: System prevents duplicate type names 100% of the time
-- **SC-036**: Existing collections remain functional when item types are modified (100% backward compatibility)
+### FR3: Type-Based Item Validation
 
-## Assumptions *(mandatory)*
+**Must Have:**
+- When creating item with custom type, system validates all required attributes are provided
+- System validates attribute values against data type and constraints
+- Validation errors show field name, constraint, and expected format
+- Items created before schema changes remain valid (backwards compatibility)
+- Schema changes that add required attributes only apply to new items
 
-1. **Predefined Types**: Assumes system ships with common predefined types (Comic Book, Puzzle, Vinyl Record) to cover typical use cases.
+**Acceptance Criteria:**
+- Missing required attribute prevents save with specific field name in error
+- Number outside min/max range shows "Must be between X and Y"
+- Text exceeding max length shows "Must be at most X characters"
+- Invalid choice selection shows "Must be one of: [choices]"
+- Date outside range shows "Must be between [min] and [max]"
 
-2. **Admin Role**: Assumes system has admin user role with permissions to review and approve custom types. Admin management is outside scope of this feature.
+### FR4: Type Templates & Reusability
 
-3. **Attribute Data Types**: Assumes supported data types are: text (string), number (integer/decimal), date, boolean, and list (select from options). Complex types (nested objects, file uploads) are future enhancements.
+**Must Have:**
+- Users can duplicate existing custom types to create new types
+- Duplicating preserves attribute definitions and constraints
+- System provides 5 common type templates:
+  - Coin (Denomination, Year, Mint Mark, Country, Grade)
+  - Stamp (Country, Year, Denomination, Condition, Catalog Number)
+  - Watch (Brand, Model, Movement, Case Material, Year)
+  - Camera (Brand, Model, Format, Lens Mount, Year)
+  - Book (Title, Author, Publisher, ISBN, Edition, Year)
 
-4. **Type Modification**: Assumes users can only edit private (unapproved) custom types. Once approved globally, types become read-only to prevent breaking existing collections.
+**Acceptance Criteria:**
+- Duplicated type name defaults to "[Original Name] Copy"
+- Template application creates new custom type with predefined attributes
+- Users can modify template-created types like any custom type
 
-5. **Type Deletion**: Assumes custom types cannot be deleted if any collections are using them. System prevents deletion and shows warning with collection count.
+## Success Criteria
 
-6. **Template Customization**: Assumes users can customize admin-provided templates by copying them and modifying attributes. Original template remains unchanged.
+**Measurable Outcomes:**
+1. **Adoption**: 60% of users create at least 1 custom type within first month
+2. **Usage**: Average 3-5 custom types per active user
+3. **Validation**: 95% of validation errors are resolved on first correction attempt
+4. **Performance**: Type schema validation completes in <50ms for 30 attributes
+5. **Reliability**: Zero data loss when editing type schemas
+6. **User Satisfaction**: 80% of users rate custom types as "Very Useful" or "Essential"
 
-7. **Validation**: Assumes basic validation rules per data type (e.g., numbers must be numeric, dates must be valid dates). Advanced validation (regex patterns, range constraints) is future enhancement.
+**Qualitative Outcomes:**
+- Users can organize any collectible type without developer intervention
+- Type schemas enforce data consistency across collections
+- Attribute validation prevents data entry errors
+- Template system accelerates common use cases
 
-8. **Attribute Limits**: Assumes custom types can have up to 20 attributes. This prevents overly complex schemas.
+## Non-Functional Requirements
 
-9. **Approval Workflow**: Assumes single-step approval (approve/reject). Multi-stage approval or approval hierarchies are future enhancements.
+### Performance
+- Type list loads in <200ms for 50 types
+- Item creation with type validation <300ms
+- Schema updates propagate to UI in <100ms
 
-10. **Type Visibility**: Assumes private custom types are only visible to their creator. Approved types are visible to all users. Pending types are visible to admins and creator only.
+### Usability
+- Type creation wizard guides users through attribute definition
+- Inline validation provides immediate feedback
+- Help text supports users in understanding attribute purposes
+- Error messages are specific and actionable
 
-11. **Sharing Impact**: Assumes collections using private custom types can be shared (Feature 006), and shared users see the custom attributes even though the type isn't globally available.
+### Scalability
+- Support 50 custom types per user
+- Support 30 attributes per type
+- Support 100,000 items across all custom types per user
 
-12. **Search Integration**: Assumes custom attributes are automatically indexed for search (Feature 004) when types are used.
+### Data Integrity
+- Type deletion prevented if items reference it
+- Schema changes preserve existing item validity
+- Attribute removal marks field as deprecated (not deleted)
+
+## Out of Scope
+
+- Sharing custom types between users (deferred to Feature 006)
+- Importing type schemas from external sources
+- Attribute formulas or calculated fields
+- Conditional validation (show/hide fields based on other values)
+- Nested/hierarchical attribute structures
+- Attribute-level permissions
+- Type versioning or change history (beyond basic audit trail)
+
+## Assumptions
+
+1. Users understand basic data types (text, number, date, boolean, choice)
+2. Most users will create 3-10 custom types maximum
+3. Attribute constraints are simple (min/max, required/optional) - no complex regex
+4. Types are user-scoped (not shared between users initially)
+5. Built-in types (Vinyl, Comic, Puzzle) cover common cases - custom types are for specialized needs
+6. JSON storage is acceptable for flexible schema definitions
+7. Schema validation errors can be handled client-side before submission
+
+## Dependencies
+
+- **Feature 001 (Collection Management)**: Custom types exist within user context
+- **Feature 002 (Item Management)**: Items reference custom types; existing JSON attributes field is foundation
+- **EF Core 9.0**: JSON column support for schema storage
+- **FluentValidation** (or similar): Attribute validation logic
+
+## Key Entities
+
+### ItemTypeSchema (Aggregate Root)
+- ItemTypeSchemaId (Guid, PK)
+- UserId (Guid, FK) - owner
+- TypeName (string 2-50 chars, unique per user)
+- Description (string 0-500 chars)
+- IsBuiltIn (bool) - true for Vinyl/Comic/Puzzle
+- IsArchived (bool) - soft delete flag
+- ArchivedAt (DateTimeOffset, nullable)
+- AttributeDefinitions (JSON) - array of attribute schemas
+- CreatedAt (DateTimeOffset)
+- UpdatedAt (DateTimeOffset)
+- ItemCount (computed) - number of items using this type
+
+### AttributeDefinition (Value Object, stored as JSON)
+- AttributeName (string 2-50 chars)
+- DataType (enum: Text, Number, Date, Choice, Boolean)
+- IsRequired (bool)
+- ValidationRules (JSON) - min/max, choices, etc.
+- HelpText (string 0-200 chars)
+- DefaultValue (object, nullable)
+- DisplayOrder (int)
+
+## Success Metrics
+
+### Business Metrics
+- Custom type creation rate
+- Average attributes per custom type
+- Type deletion/archive rate
+- Template usage distribution
+
+### Technical Metrics
+- Validation error rate
+- Schema update frequency
+- Average validation time
+- Database query performance for type-based filters
+
+### User Experience Metrics
+- Time to create first custom type
+- Completion rate for type creation wizard
+- Error correction attempts per validation failure
+- User satisfaction score (survey)
+
+## Risks & Mitigations
+
+| Risk | Impact | Probability | Mitigation |
+|------|--------|-------------|------------|
+| Users create overly complex schemas | Medium | Medium | Limit to 30 attributes, provide templates, guide with help text |
+| Schema changes break existing items | High | Low | Backwards compatibility validation, prevent destructive changes |
+| Performance degrades with many custom types | Medium | Low | Index on UserId + TypeName, cache schema definitions |
+| Users confused by data type concepts | Medium | Medium | Provide examples, templates, inline help, wizard UI |
+| Type name conflicts across users | Low | N/A | Types are user-scoped, no cross-user visibility initially |
+
+## Open Questions
+
+None - all critical decisions have reasonable defaults based on industry standards and common collection management patterns.
+
+## Acceptance Testing
+
+### Test Case 1: Create Custom Type with Validation
+**Given**: User is logged in
+**When**: User creates "Coin" type with attributes: Denomination (number, required), Year (number 1800-2024, required)
+**Then**: Type is saved successfully
+**And**: Creating coin without Denomination shows "Denomination is required"
+**And**: Creating coin with Year=1799 shows "Year must be between 1800 and 2024"
+
+### Test Case 2: Edit Type Schema (Non-Destructive)
+**Given**: "Stamp" type exists with 10 items
+**When**: User adds optional "Mint Mark" attribute
+**Then**: Existing 10 stamps remain valid
+**And**: New stamps can include "Mint Mark"
+**And**: Editing existing stamp shows "Mint Mark" field (empty, optional)
+
+### Test Case 3: Prevent Type Deletion with Items
+**Given**: "Watch" type has 25 items
+**When**: User attempts to delete "Watch" type
+**Then**: System shows error "Cannot delete - 25 items use this type"
+**And**: Type is not deleted
+
+### Test Case 4: Maximum Limits Enforced
+**Given**: User has 50 custom types
+**When**: User attempts to create 51st type
+**Then**: System shows "Maximum 50 custom types reached"
+**And**: Type creation is blocked
+
+### Test Case 5: Template Application
+**Given**: User selects "Coin" template
+**When**: User applies template
+**Then**: New type "Coin" is created with predefined attributes (Denomination, Year, Mint Mark, Country, Grade)
+**And**: User can modify attribute definitions
+**And**: User can rename type to "Ancient Coin"
+
+---
+
+**Next Steps**: Proceed with `/speckit.plan` to generate implementation plan, or use `/speckit.clarify` if requirements need refinement.
