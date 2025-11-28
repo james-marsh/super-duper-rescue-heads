@@ -13,6 +13,10 @@ public class Item
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
 
+    // Soft Delete (Feature 003)
+    public bool IsDeleted { get; private set; }
+    public DateTimeOffset? DeletedAt { get; private set; }
+
     // Navigation properties (EF Core)
     // public Collection Collection { get; private set; } = null!;
 
@@ -87,6 +91,31 @@ public class Item
         // This would check via Collection.OwnerId navigation property
         // For now, placeholder implementation
         throw new NotImplementedException("Requires Collection navigation property from Feature 001");
+    }
+
+    // Soft Delete Methods (Feature 003)
+    public void MarkAsDeleted()
+    {
+        if (IsDeleted)
+            throw new InvalidOperationException("Item is already deleted");
+
+        IsDeleted = true;
+        DeletedAt = DateTimeOffset.UtcNow;
+        UpdatedAt = DeletedAt.Value;
+
+        AddDomainEvent(new ItemDeletedEvent(ItemId, CollectionId, DeletedAt.Value));
+    }
+
+    public void Restore()
+    {
+        if (!IsDeleted)
+            throw new InvalidOperationException("Item is not deleted");
+
+        IsDeleted = false;
+        DeletedAt = null;
+        UpdatedAt = DateTimeOffset.UtcNow;
+
+        AddDomainEvent(new ItemRestoredEvent(ItemId, CollectionId, UpdatedAt));
     }
 
     private void ValidateAttributes()
