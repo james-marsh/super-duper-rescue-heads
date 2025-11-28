@@ -1,8 +1,48 @@
+using Microsoft.EntityFrameworkCore;
+using SuperDuperRescueHeads.Api.Endpoints;
+using SuperDuperRescueHeads.Domain.Items;
+using SuperDuperRescueHeads.Infrastructure.Data;
+using SuperDuperRescueHeads.Infrastructure.Data.Repositories;
+using SuperDuperRescueHeads.Infrastructure.BackgroundJobs;
+using Hangfire;
+using Hangfire.SqlServer;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+// Database
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? "Server=(localdb)\\mssqllocaldb;Database=SuperDuperRescueHeads;Trusted_Connection=true;MultipleActiveResultSets=true";
+
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(connectionString));
+
+// Repositories
+builder.Services.AddScoped<IItemRepository, ItemRepository>();
+
+// Hangfire for background jobs (Feature 003)
+builder.Services.AddHangfire(config => config
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UseSqlServerStorage(connectionString, new SqlServerStorageOptions
+    {
+        CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
+        SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
+        QueuePollInterval = TimeSpan.Zero,
+        UseRecommendedIsolationLevel = true,
+        DisableGlobalLocks = true
+    }));
+
+builder.Services.AddHangfireServer();
+
+// Background jobs
+builder.Services.AddScoped<PurgeDeletedItemsJob>();
+
+// Authorization (placeholder)
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
@@ -10,32 +50,21 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseHangfireDashboard("/hangfire"); // Hangfire dashboard
 }
 
 app.UseHttpsRedirection();
+app.UseAuthorization();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+// Map API endpoints
+app.MapItemsEndpoints();
+app.MapDeletedItemsEndpoints();
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+// Schedule recurring jobs (Feature 003 - User Story 5)
+RecurringJob.AddOrUpdate<PurgeDeletedItemsJob>(
+    "purge-deleted-items",
+    job => job.ExecuteAsync(CancellationToken.None),
+    Cron.Daily(2)); // Run daily at 2 AM
 
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

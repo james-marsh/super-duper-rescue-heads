@@ -20,6 +20,17 @@ public record ItemDeletedEvent(
     DateTimeOffset DeletedAt
 ) : DomainEvent;
 
+public record ItemRestoredEvent(
+    Guid ItemId,
+    Guid CollectionId,
+    DateTimeOffset RestoredAt
+) : DomainEvent;
+
+public record ItemPermanentlyDeletedEvent(
+    Guid ItemId,
+    DateTimeOffset PurgedAt
+) : DomainEvent;
+
 // Base domain event class (placeholder - should exist from Feature 001)
 public abstract record DomainEvent
 {

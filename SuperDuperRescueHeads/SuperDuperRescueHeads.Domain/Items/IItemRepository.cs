@@ -21,6 +21,12 @@ public interface IItemRepository
     Task UpdateAsync(Item item, CancellationToken cancellationToken = default);
     Task DeleteAsync(Item item, CancellationToken cancellationToken = default);
 
+    // Soft Delete Methods (Feature 003)
+    Task<IReadOnlyList<Item>> GetDeletedItemsAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<Item?> GetDeletedItemByIdAsync(Guid itemId, CancellationToken cancellationToken = default);
+    Task PurgeAsync(Guid itemId, CancellationToken cancellationToken = default);
+    Task<int> PurgeExpiredItemsAsync(int batchSize = 1000, CancellationToken cancellationToken = default);
+
     // Unit of Work
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
