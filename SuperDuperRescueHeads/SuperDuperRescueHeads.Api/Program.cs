@@ -1,9 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using SuperDuperRescueHeads.Api.Endpoints;
 using SuperDuperRescueHeads.Domain.Items;
+using SuperDuperRescueHeads.Domain.Search;
 using SuperDuperRescueHeads.Infrastructure.Data;
 using SuperDuperRescueHeads.Infrastructure.Data.Repositories;
 using SuperDuperRescueHeads.Infrastructure.BackgroundJobs;
+using SuperDuperRescueHeads.Infrastructure.Search;
 using Hangfire;
 using Hangfire.SqlServer;
 
@@ -21,6 +23,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // Repositories
 builder.Services.AddScoped<IItemRepository, ItemRepository>();
+
+// Search (Feature 004)
+builder.Services.AddScoped<ISearchRepository, SearchRepository>();
+builder.Services.AddScoped<ISearchService, SearchService>();
 
 // Hangfire for background jobs (Feature 003)
 builder.Services.AddHangfire(config => config
@@ -59,6 +65,7 @@ app.UseAuthorization();
 // Map API endpoints
 app.MapItemsEndpoints();
 app.MapDeletedItemsEndpoints();
+app.MapSearchEndpoints(); // Feature 004
 
 // Schedule recurring jobs (Feature 003 - User Story 5)
 RecurringJob.AddOrUpdate<PurgeDeletedItemsJob>(
