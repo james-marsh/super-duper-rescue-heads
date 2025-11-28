@@ -1,174 +1,393 @@
-# Feature Specification: Basic Sharing & Permissions
+# Feature Specification: Basic Sharing
 
-**Feature Branch**: `006-basic-sharing`
-**Created**: 2025-11-23
+**Feature ID**: 006-basic-sharing
+**Created**: 2025-11-28
 **Status**: Draft
+**Dependencies**: Feature 001 (Collection Management), Feature 002 (Item Management)
 
 ## Overview
 
-This feature enables collection owners to share collections with individual users, granting either view-only or edit permissions. Users can manage permissions and distinguish between owned and shared collections.
+Enable users to share their collections with other users via email invitation or username lookup. Collaborators can be granted read-only (view) or edit permissions. Shared collections appear in the collaborator's collection list alongside their own collections. This feature supports single-user sharing only (one owner, multiple individual collaborators) - group sharing is deferred to Feature 007.
 
-**Scope**: This feature handles basic sharing with individual users only. Group sharing is covered in Feature 007, real-time notifications in Feature 008, and concurrent editing in Feature 009.
+## User Scenarios & Testing
 
-**Dependencies**:
-- Feature 001: Core Collection Management (collections must exist)
-- Feature 002: Basic Item Management (shared users can view/edit items)
+### Primary User Flow
 
-**Related Features**:
-- Feature 007: Group Sharing (extends sharing to user groups)
-- Feature 008: Real-Time Notifications (notifies users of sharing events)
-- Feature 009: Concurrent Editing (handles multi-user editing conflicts)
+**Scenario 1: Owner shares collection with read-only access**
+1. User (Alice) owns "Vintage Vinyl Records" collection with 50 items
+2. Alice navigates to collection settings
+3. Clicks "Share Collection"
+4. Enters Bob's email address: bob@example.com
+5. Selects permission level: "View Only"
+6. Clicks "Send Invitation"
+7. System sends email to Bob with invitation link
+8. Bob receives email, clicks invitation link
+9. Bob sees "Accept Invitation" page with collection details (name, owner, item count, permission level)
+10. Bob clicks "Accept"
+11. "Vintage Vinyl Records" appears in Bob's collection list with "Shared by Alice" badge
+12. Bob can view all 50 items but cannot add/edit/delete items
+13. Alice sees Bob in "Collaborators" list with "View Only" permission
 
-## Clarifications
+**Expected outcome**: Bob can view Alice's collection but cannot modify it. Alice maintains full ownership and control.
 
-### Session 2025-11-23
+**Scenario 2: Owner shares collection with edit access**
+1. User (Carol) owns "Comic Book Collection" with 30 items
+2. Carol shares collection with Dave (dave@example.com), permission: "Can Edit"
+3. Dave accepts invitation
+4. "Comic Book Collection" appears in Dave's collection list
+5. Dave can:
+   - View all 30 items
+   - Add new items to the collection
+   - Edit existing item details (name, notes, attributes)
+   - Mark items as deleted (soft delete to trash)
+6. Dave cannot:
+   - Delete the collection itself
+   - Change collection name or description
+   - Remove Carol as owner
+   - Invite additional collaborators (only owner can share)
+7. Carol sees Dave's edits in real-time (item added notification)
 
-- Q: Should collections be shareable? → A: Yes, with permission levels
-- Two permission levels: view (read-only) and edit (full access)
-- Share with individual users only (groups in Feature 007)
-- Owner can grant, modify, and revoke permissions
-- Shared users receive basic notification (infrastructure in Feature 008)
+**Expected outcome**: Dave can collaboratively manage items but cannot modify collection-level settings or ownership.
 
-## User Scenarios & Testing *(mandatory)*
+**Scenario 3: Owner revokes access**
+1. Alice previously shared "Vintage Vinyl Records" with Bob (View Only)
+2. Alice navigates to collection settings → Collaborators
+3. Clicks "Remove" next to Bob's name
+4. Confirms revocation
+5. "Vintage Vinyl Records" immediately disappears from Bob's collection list
+6. Bob can no longer view any items in the collection
+7. Bob receives email notification: "Access to 'Vintage Vinyl Records' has been revoked"
+8. Alice's collection remains unchanged
 
-### User Story 1 - Share Collection with View Permission
+**Expected outcome**: Bob loses all access immediately. No data loss for Alice.
 
-A user wants to share their collection with another user, granting view-only access so they can browse but not modify items.
+**Scenario 4: Collaborator declines invitation**
+1. Eve receives invitation to "Stamp Collection" from Frank
+2. Eve clicks invitation link
+3. Eve reviews collection details
+4. Eve clicks "Decline"
+5. Invitation is marked as declined
+6. Frank sees "Invitation declined" status in Collaborators list
+7. Eve does not see collection in her list
 
-**Why this priority**: Enables basic collaboration and collection sharing without risk of accidental modifications.
-
-**Independent Test**: Can be tested by sharing a collection with another user with view permissions, verifying that user can see all items but cannot add, edit, or delete anything.
-
-**Acceptance Scenarios**:
-
-1. **Given** a user owns a collection, **When** they choose to share it and specify another user's email with "view" permission, **Then** that user receives access and can view the collection but not edit
-2. **Given** a user has view permission on a shared collection, **When** they try to add an item, **Then** the system prevents the action and shows a permission error
-3. **Given** a user has view permission on a shared collection, **When** they try to edit an item, **Then** the system prevents the action and shows a permission error
-4. **Given** a user has view permission on a shared collection, **When** they try to delete an item, **Then** the system prevents the action and shows a permission error
-
----
-
-### User Story 2 - Share Collection with Edit Permission
-
-A user wants to share their collection with another user, granting full edit access so they can add, modify, and remove items.
-
-**Why this priority**: Enables full collaboration where multiple users can contribute to building and maintaining a collection.
-
-**Independent Test**: Can be tested by sharing a collection with another user with edit permissions, verifying that user can add, edit, and delete items just like the owner.
-
-**Acceptance Scenarios**:
-
-1. **Given** a user owns a collection, **When** they grant "edit" permission to another user, **Then** that user can add, edit, and remove items from the collection
-2. **Given** a user has edit permission on a shared collection, **When** they add an item, **Then** the item is saved and visible to all users with access
-3. **Given** a user has edit permission on a shared collection, **When** they edit an item, **Then** the changes are saved and visible to all users with access
-4. **Given** a user has edit permission on a shared collection, **When** they delete an item, **Then** the item is soft-deleted (Feature 003) and moved to "Deleted Items"
-
----
-
-### User Story 3 - Manage Collection Permissions
-
-A collection owner wants to view all users who have access to their collection and modify or revoke permissions as needed.
-
-**Why this priority**: Provides collection owners with control over who can access their collections and at what level.
-
-**Independent Test**: Can be tested by sharing with multiple users, viewing the permissions list, changing permission levels, and revoking access.
-
-**Acceptance Scenarios**:
-
-1. **Given** a collection is shared with multiple users, **When** the owner views permissions, **Then** they see a list of all users with their respective permission levels
-2. **Given** a user has view permission, **When** the owner changes it to edit permission, **Then** the user can now edit items in the collection
-3. **Given** a user has edit permission, **When** the owner changes it to view permission, **Then** the user can no longer edit items
-4. **Given** a user has access to a shared collection, **When** the owner revokes their access, **Then** the user can no longer view or access the collection
-5. **Given** permissions are changed, **When** the shared user refreshes their view, **Then** the new permissions take effect within 5 seconds
-
----
-
-### User Story 4 - Distinguish Owned vs Shared Collections
-
-A user wants to easily see which collections they own versus which collections have been shared with them.
-
-**Why this priority**: Helps users understand their relationship to collections and what actions they can perform.
-
-**Independent Test**: Can be tested by having collections owned by user and collections shared with user, verifying they are clearly distinguished in the UI.
-
-**Acceptance Scenarios**:
-
-1. **Given** a user is viewing their collection list, **When** they see the list, **Then** owned collections and shared collections are clearly distinguished (e.g., with icons or labels)
-2. **Given** a user is viewing a shared collection, **When** they see the collection details, **Then** the owner's name is displayed
-3. **Given** a user has multiple collections, **When** they filter by "Shared with me", **Then** only collections others have shared with them appear
-4. **Given** a user views a shared collection, **When** they see the permission level, **Then** it's clearly indicated whether they have view or edit access
-
----
+**Expected outcome**: Declined invitations don't grant access. Frank is aware of the decline.
 
 ### Edge Cases
 
-- What happens when a user tries to share a collection with someone who doesn't have an account?
-- What happens when a collection owner tries to remove their own ownership?
-- What happens when a collection owner deletes a collection that has been shared with others?
-- What happens when a user's access to a shared collection is revoked while they are actively viewing it?
-- What happens when a user tries to share with the same user twice?
-- What happens when sharing with a user who is already in a group with access (Feature 007)?
-- What happens when owner shares a collection using a private custom item type (Feature 005)?
+1. **Invitation to non-existent email**: System sends invitation email; if recipient signs up later with that email, invitation is auto-applied
+2. **Invitation to existing user**: User receives both email and in-app notification; collection appears in "Pending Invitations" section
+3. **Duplicate invitation**: System shows "Already invited" error; option to resend invitation
+4. **Self-invitation**: System rejects with "Cannot share with yourself"
+5. **Maximum collaborators (10) reached**: System shows "Maximum 10 collaborators per collection" error
+6. **Owner deletes collection**: All collaborator access revoked; collaborators receive email notification
+7. **Collaborator deletes their account**: Collection share automatically removed from owner's collaborator list
+8. **Permission change**: Owner changes Bob from "View Only" to "Can Edit" → Bob receives email notification and sees updated permissions immediately
+9. **Concurrent edits**: Two collaborators edit same item simultaneously → last write wins (eventual consistency); conflict notification shown
 
-## Requirements *(mandatory)*
+## Functional Requirements
 
-### Functional Requirements
+### FR1: Invitation System
 
-- **FR-022**: System MUST support permission system allowing collection owners to share collections with specific users
-- **FR-023**: System MUST support two permission levels for shared collections: "view" (read-only) and "edit" (full access)
-- **FR-024**: System MUST allow collection owners to grant, modify, and revoke access permissions for shared users
-- **FR-025**: System MUST enforce permission controls, preventing unauthorized access to private or restricted collections
-- **FR-026**: System MUST distinguish between owned collections and collections shared with the user in the collection list
-- **FR-027**: System MUST notify users when a collection is shared with them or when their access is revoked (notification infrastructure in Feature 008)
-- **FR-029**: System MUST track and display who shared access and when for audit purposes
-- **FR-080**: System MUST prevent collection owners from removing their own ownership without transferring or deleting collection
-- **FR-081**: System MUST allow searching for users by email address when sharing collections
-- **FR-082**: System MUST prevent duplicate permission entries for the same user on the same collection
+**Must Have:**
+- Users can invite collaborators by email address or username
+- System sends email invitation with:
+  - Collection name, item count, owner name
+  - Permission level (View Only / Can Edit)
+  - Accept/Decline buttons (secure links)
+  - Expiration: 7 days (configurable)
+- In-app notification for existing users
+- Pending invitations visible in owner's Collaborators list with status:
+  - Pending (awaiting response)
+  - Accepted (active collaboration)
+  - Declined (invitation rejected)
+  - Expired (not accepted within 7 days)
+- Resend invitation option (resets expiration)
+- Cancel pending invitation option
 
-### Key Entities
+**Acceptance Criteria:**
+- Email sent within 1 minute of invitation creation
+- Accept/Decline links are single-use, time-bound (7 days)
+- Expired invitations automatically removed from Pending list after 30 days
+- User cannot invite same collaborator twice (unless previous invitation declined/expired)
+- Maximum 10 active collaborators per collection enforced
 
-- **Collection Permission**: Defines access rights for a user to a specific collection. Contains the collection reference, user reference, permission level (view or edit), and grant metadata (who shared, when shared, last modified). Enforces access control for shared collections.
-- **Collection** (from Feature 001): Extended with ownership and sharing metadata.
-- **User**: The owner of collections and recipient of shared collections.
-- **Permission Change Event**: Records changes to permissions for audit trail. Contains collection, user, old permission level, new permission level, changed by, and timestamp.
+### FR2: Permission Levels
 
-## Success Criteria *(mandatory)*
+**Must Have:**
+- Two permission levels:
+  - **View Only**: Can view collection and items (read-only)
+  - **Can Edit**: Can view, add, edit, delete items (but not collection itself)
+- Owner retains exclusive rights:
+  - Change collection name/description
+  - Delete collection
+  - Invite/remove collaborators
+  - Change collaborator permissions
+- Collaborators cannot:
+  - Transfer ownership
+  - Invite additional collaborators
+  - Delete collection
+  - Modify collection-level settings
 
-### Measurable Outcomes
+**Acceptance Criteria:**
+- View Only users cannot access Create/Edit/Delete item buttons
+- Can Edit users can modify items but not collection settings
+- Permission changes take effect immediately (no cache staleness)
+- UI clearly shows permission level on shared collections ("View Only" / "Can Edit" badge)
 
-- **SC-009**: Shared collections with view permission prevent 100% of unauthorized edit attempts
-- **SC-010**: Users can share a collection and grant access to another user in under 2 minutes
-- **SC-011**: Permission changes (grant, revoke, modify) take effect within 5 seconds for all active sessions
-- **SC-041**: Users can view all permissions for their collections in under 1 second
-- **SC-042**: Owned vs shared collections are clearly distinguished with 100% visual clarity
-- **SC-043**: Permission revocations are immediate (within 2 seconds) and prevent further access
+### FR3: Shared Collection Views
 
-## Assumptions *(mandatory)*
+**Must Have:**
+- Shared collections appear in collaborator's collection list with:
+  - Collection name
+  - "Shared by [Owner Name]" badge
+  - Permission level indicator ("View Only" / "Can Edit")
+  - Item count
+  - Last updated timestamp
+- Visual distinction from owned collections (icon, color, badge)
+- Filter: "My Collections" / "Shared With Me" / "All"
+- Shared collections sortable by:
+  - Name (alphabetical)
+  - Last updated (newest first)
+  - Item count (highest first)
 
-1. **User Authentication**: Assumes users are authenticated and user accounts exist before sharing can occur.
+**Acceptance Criteria:**
+- Shared collections clearly distinguishable from owned collections
+- Filter toggles work instantly (<100ms)
+- Clicking shared collection opens item list view (respecting permissions)
+- Owner's edits reflect in collaborator's view within 5 seconds (real-time sync)
 
-2. **User Discovery**: Assumes users can be found by email address. User management system provides user lookup capability.
+### FR4: Collaborator Management
 
-3. **Invitation Workflow**: Assumes users can only share with existing registered users for MVP. Invitation workflow for non-users is future enhancement (requires email system).
+**Must Have:**
+- Owner can view list of collaborators with:
+  - Name, email, permission level
+  - Date added
+  - Last accessed timestamp
+- Owner can:
+  - Change permission level (View Only ↔ Can Edit)
+  - Remove collaborator (revoke access)
+  - Resend invitation (if pending)
+  - Cancel invitation (if pending)
+- Collaborator can:
+  - View their own permission level
+  - Leave shared collection (stop collaboration)
+- Audit log tracks:
+  - Invitation sent/accepted/declined/expired
+  - Permission changes
+  - Collaborator added/removed
+  - Items added/edited/deleted by collaborators (user attribution)
 
-4. **Ownership Transfer**: Assumes collection ownership cannot be transferred. If owner wants to leave, they must delete the collection or continue as owner.
+**Acceptance Criteria:**
+- Removing collaborator immediately revokes access (<5 seconds)
+- Permission change takes effect immediately
+- Audit log shows user attribution for all actions
+- "Leave" action removes collection from collaborator's view instantly
 
-5. **Permission Model**: Assumes two-tier permission model (view, edit) is sufficient for MVP. More granular permissions (e.g., "add items only", "delete items") are future enhancements.
+### FR5: Notifications
 
-6. **Permission Enforcement**: Assumes all item operations (add, edit, delete) check permissions at the API level before allowing changes.
+**Must Have:**
+- Email notifications for:
+  - Invitation received (with Accept/Decline links)
+  - Invitation accepted by collaborator (to owner)
+  - Access revoked (to collaborator)
+  - Permission changed (to collaborator)
+  - Collection deleted by owner (to all collaborators)
+- In-app notifications for:
+  - New invitation received
+  - Collaborator joined collection
+  - Collaborator left collection
+  - Items added/edited/deleted by collaborators (optional, user preference)
+- Notification preferences:
+  - Email: Always, Daily digest, Never
+  - In-app: Instant, Hourly summary, Never
 
-7. **Collection Deletion**: Assumes when owner deletes a shared collection, all shared users immediately lose access. Deletion is handled by Feature 001.
+**Acceptance Criteria:**
+- Email delivery within 5 minutes of event
+- In-app notifications appear within 30 seconds (WebSocket/SignalR)
+- Notification preferences saved and respected
+- Unsubscribe link in all emails
 
-8. **Access Revocation**: Assumes when user's access is revoked, any changes they have in progress are handled by Feature 009 (concurrent editing).
+## Success Criteria
 
-9. **Notification Delivery**: Assumes basic notification about sharing events is provided, but real-time notification infrastructure is in Feature 008.
+**Measurable Outcomes:**
+1. **Adoption**: 40% of users share at least 1 collection within first 3 months
+2. **Collaboration**: Average 2-3 active collaborators per shared collection
+3. **Invitation Acceptance Rate**: 70% of invitations accepted within 7 days
+4. **Permission Distribution**: 60% View Only, 40% Can Edit (indicates trust balance)
+5. **Performance**: Invitation sent in <500ms, permission check in <50ms
+6. **User Satisfaction**: 85% of users rate sharing as "Easy to use" or "Very easy"
 
-10. **Audit Trail**: Assumes permission changes are logged for security and compliance. Logs retained according to standard retention policies.
+**Qualitative Outcomes:**
+- Users can safely collaborate on collections without ownership transfer
+- Clear permission boundaries prevent accidental data loss
+- Real-time sync enables collaborative cataloging sessions
+- Email invitations work seamlessly for users not yet signed up
 
-11. **UI Indicators**: Assumes clear visual distinction between owned and shared collections in all views (list, detail, breadcrumbs).
+## Non-Functional Requirements
 
-12. **Custom Types**: Assumes collections using private custom item types (Feature 005) can be shared, and shared users can see custom attributes even though the type isn't globally available.
+### Security
+- Invitation tokens are cryptographically secure (128-bit random)
+- Tokens are single-use (invalidated after accept/decline)
+- Permission checks enforced at API layer (policy-based authorization)
+- Collaborators cannot escalate permissions
+- SQL injection prevention (parameterized queries)
 
-13. **Multiple Devices**: Assumes users may be logged in on multiple devices. Permission changes must propagate to all active sessions.
+### Performance
+- Invitation creation: <500ms
+- Permission check: <50ms (cached in-memory for 30 seconds)
+- Shared collection list load: <300ms for 100 collections
+- Real-time sync latency: <5 seconds (SignalR/WebSocket)
 
-14. **Performance**: Assumes typical collections shared with 2-10 users. Permission list must load in under 1 second for up to 50 shared users.
+### Usability
+- Invitation flow: 3 clicks (Share → Enter email → Send)
+- Permission change: 2 clicks (Collaborators → Change permission dropdown)
+- Clear visual distinction between owned and shared collections
+- Mobile-responsive sharing UI
+
+### Scalability
+- Support 10 collaborators per collection
+- Support 100 shared collections per user
+- Support 10,000 active invitations system-wide
+
+## Out of Scope
+
+- Group-based sharing (deferred to Feature 007)
+- Role-based permissions beyond View/Edit (e.g., Comment-only, Download-only)
+- Shared collection folders or hierarchies
+- Collection templates/duplication across users
+- Public sharing (share link without authentication)
+- External integrations (share to social media, export to Google Sheets)
+- Offline collaboration or conflict resolution UI
+- Granular item-level permissions (all items inherit collection permission)
+
+## Assumptions
+
+1. Users trust collaborators they invite (no approval workflow for collaborator actions)
+2. Email is primary invitation method (username lookup is secondary)
+3. Last write wins for concurrent edits (no CRDT or OT conflict resolution)
+4. Collaborators have existing accounts or will sign up to accept invitations
+5. SendGrid or similar email service is available for invitation emails
+6. Real-time sync is "best effort" (5-second SLA acceptable, not milliseconds)
+7. Audit log is read-only (no undo/redo for collaborative actions)
+8. Max 10 collaborators is sufficient for most personal collections
+
+## Dependencies
+
+- **Feature 001 (Collection Management)**: Collections must exist to be shared
+- **Feature 002 (Item Management)**: Items must exist to be viewed/edited by collaborators
+- **Email Service**: SendGrid (or alternative) for invitation emails
+- **Real-time Service**: SignalR or WebSockets for real-time sync (optional for MVP)
+- **Authentication**: User accounts (user IDs, email addresses)
+
+## Key Entities
+
+### CollectionShare (Aggregate Root)
+- CollectionShareId (Guid, PK)
+- CollectionId (Guid, FK to Collections)
+- SharedWithUserId (Guid, FK to Users)
+- Permission (enum: ViewOnly, CanEdit)
+- InvitedByUserId (Guid, FK to Users)
+- InvitedAt (DateTimeOffset)
+- AcceptedAt (DateTimeOffset, nullable)
+- Status (enum: Pending, Accepted, Declined, Expired, Revoked)
+- ExpiresAt (DateTimeOffset) - invitation expiration
+- LastAccessedAt (DateTimeOffset, nullable)
+
+### ShareInvitation (Value Object)
+- InvitationToken (string, unique) - secure token for accept/decline links
+- Email (string) - invited user's email
+- CollectionId (Guid)
+- Permission (enum: ViewOnly, CanEdit)
+- ExpiresAt (DateTimeOffset)
+
+### ShareAuditLog (Aggregate Root)
+- AuditLogId (Guid, PK)
+- CollectionId (Guid, FK)
+- UserId (Guid, FK) - user who performed action
+- Action (enum: Invited, Accepted, Declined, PermissionChanged, Revoked, ItemAdded, ItemEdited, ItemDeleted)
+- Details (JSON) - action metadata
+- Timestamp (DateTimeOffset)
+
+## Success Metrics
+
+### Business Metrics
+- Number of collections shared
+- Invitation acceptance rate
+- Average collaborators per shared collection
+- Permission distribution (View vs Edit)
+- Collaboration session duration
+
+### Technical Metrics
+- Invitation creation latency (p50, p95, p99)
+- Permission check latency (cached vs uncached)
+- Email delivery success rate
+- Real-time sync latency
+- Concurrent edit conflicts
+
+### User Experience Metrics
+- Time to send first invitation
+- Invitation flow completion rate
+- Permission change frequency (indicates trust evolution)
+- Collaborator churn rate (removed/left)
+
+## Risks & Mitigations
+
+| Risk | Impact | Probability | Mitigation |
+|------|--------|-------------|------------|
+| Email spam filters block invitations | High | Medium | Use reputable email service (SendGrid), test deliverability, provide in-app fallback |
+| Concurrent edits cause data loss | High | Low | Last write wins + conflict notification, eventual consistency acceptable |
+| Permission escalation vulnerability | High | Low | Policy-based authorization at API layer, unit tests for permission checks |
+| Collaborators abuse edit permissions | Medium | Medium | Audit log tracks all actions, owner can revoke access, soft delete enables recovery |
+| Invitation token leakage | Medium | Low | Tokens are single-use, expire in 7 days, HTTPS only |
+| Real-time sync failure | Low | Medium | Graceful degradation - manual refresh fallback, 5-second SLA not critical |
+
+## Open Questions
+
+None - all critical decisions have reasonable defaults:
+- Email as primary invitation method (industry standard)
+- 7-day invitation expiration (common practice)
+- 10 collaborator limit (sufficient for personal collections)
+- Last write wins for conflicts (acceptable for collaborative cataloging)
+
+## Acceptance Testing
+
+### Test Case 1: Send and Accept Invitation
+**Given**: Alice owns "Vintage Cameras" collection
+**When**: Alice invites Bob (bob@example.com) with "View Only" permission
+**Then**: Bob receives email with Accept/Decline links
+**And**: Bob clicks Accept
+**And**: "Vintage Cameras" appears in Bob's collection list with "Shared by Alice" badge
+**And**: Bob can view items but cannot edit
+**And**: Alice sees Bob in Collaborators list with "View Only" permission
+
+### Test Case 2: Change Permission Level
+**Given**: Carol shared "Stamps" collection with Dave (View Only)
+**When**: Carol changes Dave's permission to "Can Edit"
+**Then**: Dave receives email notification of permission change
+**And**: Dave can now add/edit/delete items in "Stamps" collection
+**And**: Dave sees "Can Edit" permission indicator
+
+### Test Case 3: Revoke Access
+**Given**: Eve shared "Coins" with Frank (Can Edit)
+**When**: Eve clicks "Remove" next to Frank in Collaborators list
+**Then**: Frank loses access immediately (<5 seconds)
+**And**: "Coins" disappears from Frank's collection list
+**And**: Frank receives email notification: "Access revoked"
+
+### Test Case 4: Maximum Collaborators Limit
+**Given**: George has shared "Watches" with 10 collaborators
+**When**: George attempts to invite 11th collaborator (Helen)
+**Then**: System shows error "Maximum 10 collaborators per collection"
+**And**: Invitation is not sent
+
+### Test Case 5: Invitation Expiration
+**Given**: Ian sent invitation to Jane 8 days ago
+**And**: Jane has not accepted
+**When**: Jane clicks invitation link
+**Then**: System shows "Invitation expired"
+**And**: Jane cannot accept
+**And**: Invitation status is "Expired" in Ian's Collaborators list
+
+---
+
+**Next Steps**: Proceed with `/speckit.plan` to generate implementation plan.
