@@ -1,0 +1,441 @@
+openapi: 3.0.3
+info:
+  title: Super Duper Rescue Heads - Search API
+  description: |
+    Full-text search across items with collection-specific and global search modes,
+    filtering by date range and custom attributes, relevance ranking, and search suggestions.
+  version: 1.0.0
+  contact:
+    name: Super Duper Rescue Heads API Support
+
+servers:
+  - url: https://api.superduperrescueheads.com/api/v1
+    description: Production server
+  - url: https://localhost:5001/api/v1
+    description: Local development server
+
+tags:
+  - name: Search
+    description: Item search operations
+
+paths:
+  /search:
+    get:
+      tags:
+        - Search
+      summary: Search items
+      description: |
+        Search across all user's items or within a specific collection using full-text search.
+        Supports filtering by acquisition date range and custom attributes.
+        Results ordered by relevance score (exact matches first).
+      operationId: searchItems
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Search term (1-200 characters)
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 200
+            example: "vintage camera"
+        - name: collectionId
+          in: query
+          required: false
+          description: Optional collection ID to search within (omit for global search)
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174000"
+        - name: startDate
+          in: query
+          required: false
+          description: Filter by acquisition date >= startDate (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+            example: "2020-01-01T00:00:00Z"
+        - name: endDate
+          in: query
+          required: false
+          description: Filter by acquisition date <= endDate (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+            example: "2022-12-31T23:59:59Z"
+        - name: page
+          in: query
+          required: false
+          description: Page number (1-based)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+            example: 1
+        - name: pageSize
+          in: query
+          required: false
+          description: Items per page (1-100)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 20
+      responses:
+        '200':
+          description: Search results returned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResultPage'
+              examples:
+                globalSearch:
+                  summary: Global search across all collections
+                  value:
+                    results:
+                      - itemId: "123e4567-e89b-12d3-a456-426614174001"
+                        name: "Vintage Camera - Nikon F3"
+                        notes: "Classic 35mm SLR camera from 1980s"
+                        collectionId: "123e4567-e89b-12d3-a456-426614174000"
+                        collectionName: "Vintage Cameras"
+                        acquisitionDate: "2022-06-15T00:00:00Z"
+                        createdAt: "2023-01-10T14:30:00Z"
+                        relevanceScore: 0.95
+                        highlights:
+                          - "vintage"
+                          - "camera"
+                      - itemId: "223e4567-e89b-12d3-a456-426614174002"
+                        name: "Antique Film Camera"
+                        notes: "Rare vintage Leica from 1950s"
+                        collectionId: "123e4567-e89b-12d3-a456-426614174000"
+                        collectionName: "Vintage Cameras"
+                        acquisitionDate: "2021-03-20T00:00:00Z"
+                        createdAt: "2023-02-15T10:45:00Z"
+                        relevanceScore: 0.87
+                        highlights:
+                          - "vintage"
+                          - "camera"
+                    totalCount: 42
+                    page: 1
+                    pageSize: 20
+                    hasNextPage: true
+                    hasPreviousPage: false
+                    query:
+                      searchTerm: "vintage camera"
+                      scope: "Global"
+        '400':
+          description: Invalid search parameters
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              examples:
+                emptySearchTerm:
+                  summary: Search term is empty
+                  value:
+                    type: "https://tools.ietf.org/html/rfc7231#section-6.5.1"
+                    title: "Invalid search term"
+                    status: 400
+                    detail: "Search term cannot be empty or whitespace only"
+                    instance: "/api/v1/search"
+        '401':
+          description: Unauthorized - authentication required
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '404':
+          description: Collection not found or user doesn't own collection
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /search/suggestions:
+    get:
+      tags:
+        - Search
+      summary: Get search suggestions
+      description: |
+        Get auto-complete suggestions based on prefix (3+ characters).
+        Returns up to 5 suggestions from existing item names.
+      operationId: getSearchSuggestions
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: prefix
+          in: query
+          required: true
+          description: Search prefix (3+ characters)
+          schema:
+            type: string
+            minLength: 3
+            maxLength: 50
+            example: "vint"
+        - name: limit
+          in: query
+          required: false
+          description: Maximum suggestions to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 10
+            default: 5
+            example: 5
+      responses:
+        '200':
+          description: Suggestions returned successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  suggestions:
+                    type: array
+                    items:
+                      type: string
+                    maxItems: 10
+                    example:
+                      - "vintage camera"
+                      - "vintage watch"
+                      - "vintage coin"
+                      - "vintage stamp"
+                      - "vintage book"
+        '400':
+          description: Invalid prefix (too short)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /search/recent:
+    get:
+      tags:
+        - Search
+      summary: Get recent searches
+      description: |
+        Get user's last 5 search terms for quick access.
+        Returns empty array if no recent searches.
+      operationId: getRecentSearches
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Recent searches returned successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recentSearches:
+                    type: array
+                    items:
+                      type: string
+                    maxItems: 5
+                    example:
+                      - "coin"
+                      - "vintage camera"
+                      - "stamp 1920"
+                      - "watch"
+                      - "camera"
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    SearchResultPage:
+      type: object
+      required:
+        - results
+        - totalCount
+        - page
+        - pageSize
+        - hasNextPage
+        - hasPreviousPage
+        - query
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchResultItem'
+          description: Search results for current page
+        totalCount:
+          type: integer
+          minimum: 0
+          description: Total number of matching items across all pages
+          example: 42
+        page:
+          type: integer
+          minimum: 1
+          description: Current page number (1-based)
+          example: 1
+        pageSize:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: Number of items per page
+          example: 20
+        hasNextPage:
+          type: boolean
+          description: Whether there are more pages available
+          example: true
+        hasPreviousPage:
+          type: boolean
+          description: Whether there are previous pages
+          example: false
+        query:
+          $ref: '#/components/schemas/SearchQuery'
+
+    SearchResultItem:
+      type: object
+      required:
+        - itemId
+        - name
+        - collectionId
+        - collectionName
+        - createdAt
+        - relevanceScore
+      properties:
+        itemId:
+          type: string
+          format: uuid
+          description: Unique item identifier
+          example: "123e4567-e89b-12d3-a456-426614174001"
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Item name
+          example: "Vintage Camera - Nikon F3"
+        notes:
+          type: string
+          nullable: true
+          maxLength: 1000
+          description: Item notes (optional)
+          example: "Classic 35mm SLR camera from 1980s"
+        collectionId:
+          type: string
+          format: uuid
+          description: Collection containing this item
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        collectionName:
+          type: string
+          description: Name of collection containing this item
+          example: "Vintage Cameras"
+        acquisitionDate:
+          type: string
+          format: date-time
+          nullable: true
+          description: When item was acquired (optional)
+          example: "2022-06-15T00:00:00Z"
+        createdAt:
+          type: string
+          format: date-time
+          description: When item was created in system
+          example: "2023-01-10T14:30:00Z"
+        relevanceScore:
+          type: number
+          format: double
+          minimum: 0.0
+          maximum: 1.0
+          description: Search relevance score (0.0-1.0, higher = more relevant)
+          example: 0.95
+        highlights:
+          type: array
+          items:
+            type: string
+          description: Keywords that matched the search term
+          example:
+            - "vintage"
+            - "camera"
+
+    SearchQuery:
+      type: object
+      required:
+        - searchTerm
+        - scope
+      properties:
+        searchTerm:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: User's search term
+          example: "vintage camera"
+        collectionId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Collection to search within (null = all collections)
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        scope:
+          type: string
+          enum:
+            - Global
+            - CollectionSpecific
+          description: Search scope
+          example: "Global"
+        filters:
+          type: object
+          nullable: true
+          properties:
+            startDate:
+              type: string
+              format: date-time
+              nullable: true
+              description: Filter by acquisition date >= startDate
+              example: "2020-01-01T00:00:00Z"
+            endDate:
+              type: string
+              format: date-time
+              nullable: true
+              description: Filter by acquisition date <= endDate
+              example: "2022-12-31T23:59:59Z"
+
+    ProblemDetails:
+      type: object
+      required:
+        - type
+        - title
+        - status
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI reference identifying the problem type
+          example: "https://tools.ietf.org/html/rfc7231#section-6.5.1"
+        title:
+          type: string
+          description: Short, human-readable summary of the problem
+          example: "Invalid search term"
+        status:
+          type: integer
+          description: HTTP status code
+          example: 400
+        detail:
+          type: string
+          description: Human-readable explanation specific to this occurrence
+          example: "Search term cannot be empty or whitespace only"
+        instance:
+          type: string
+          format: uri
+          description: URI reference identifying the specific occurrence
+          example: "/api/v1/search"
