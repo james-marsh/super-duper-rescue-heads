@@ -3,6 +3,8 @@
 Auto-generated from all feature plans. Last updated: 2025-11-27
 
 ## Active Technologies
+- C# 14 with .NET 10 SDK + .NET Aspire, Blazor Server, EF Core (007-group-sharing)
+- Azure SQL Database (007-group-sharing)
 
 - C# 14 with .NET 10 SDK + .NET Aspire, Entity Framework Core 9.0, SQL Server Full-Text Search (initial) or Azure Cognitive Search (future), Blazor Server (004-search-functionality)
 
@@ -23,6 +25,7 @@ tests/
 C# 14 with .NET 10 SDK: Follow standard conventions
 
 ## Recent Changes
+- 007-group-sharing: Added C# 14 with .NET 10 SDK + .NET Aspire, Blazor Server, EF Core
 
 - 004-search-functionality: Added C# 14 with .NET 10 SDK + .NET Aspire, Entity Framework Core 9.0, SQL Server Full-Text Search (initial) or Azure Cognitive Search (future), Blazor Server
 
