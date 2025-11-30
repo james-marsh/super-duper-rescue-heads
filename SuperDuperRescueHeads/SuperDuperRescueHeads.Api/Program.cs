@@ -19,6 +19,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddOpenApi();
+builder.Services.AddMemoryCache(); // Feature 007: For caching group memberships
 
 // Database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
@@ -60,6 +61,7 @@ builder.Services.AddHangfireServer();
 
 // Background jobs
 builder.Services.AddScoped<PurgeDeletedItemsJob>();
+builder.Services.AddScoped<SyncGroupMembershipsJob>();
 
 // Authorization (Feature 006)
 builder.Services.AddHttpContextAccessor();
@@ -83,12 +85,21 @@ app.MapItemsEndpoints();
 app.MapDeletedItemsEndpoints();
 app.MapSearchEndpoints(); // Feature 004
 app.MapCollectionSharingEndpoints(); // Feature 006
+app.MapGroupSharingEndpoints(); // Feature 007
+app.MapGroupMembershipWebhooks(); // Feature 007 - Webhooks for real-time sync
 
 // Schedule recurring jobs (Feature 003 - User Story 5)
 RecurringJob.AddOrUpdate<PurgeDeletedItemsJob>(
     "purge-deleted-items",
     job => job.ExecuteAsync(CancellationToken.None),
     Cron.Daily(2)); // Run daily at 2 AM
+
+// Schedule group membership sync job (Feature 007 - User Story 2)
+// Runs every 30 seconds to meet SC-044 and SC-045 requirements
+RecurringJob.AddOrUpdate<SyncGroupMembershipsJob>(
+    "sync-group-memberships",
+    job => job.ExecuteAsync(CancellationToken.None),
+    "*/30 * * * * *"); // Every 30 seconds
 
 app.Run();
 
