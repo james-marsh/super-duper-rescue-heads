@@ -70,6 +70,25 @@ public class CollectionShareRepository : ICollectionShareRepository
                 && cs.Status == ShareStatus.Accepted, cancellationToken);
     }
 
+    // Feature 007: Group sharing methods
+    public async Task<List<CollectionShare>> GetByGroupIdAsync(Guid groupId, CancellationToken cancellationToken = default)
+    {
+        return await _context.CollectionShares
+            .AsNoTracking()
+            .Where(cs => cs.GroupId == groupId)
+            .OrderByDescending(cs => cs.CreatedAt)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<CollectionShare>> GetGroupSharesByCollectionIdAsync(Guid collectionId, CancellationToken cancellationToken = default)
+    {
+        return await _context.CollectionShares
+            .AsNoTracking()
+            .Where(cs => cs.CollectionId == collectionId && cs.GroupId != null)
+            .OrderByDescending(cs => cs.CreatedAt)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task AddAsync(CollectionShare share, CancellationToken cancellationToken = default)
     {
         await _context.CollectionShares.AddAsync(share, cancellationToken);

@@ -18,6 +18,9 @@ public class CollectionShareConfiguration : IEntityTypeConfiguration<CollectionS
         builder.Property(cs => cs.SharedWithUserId)
             .IsRequired();
 
+        builder.Property(cs => cs.GroupId)
+            .IsRequired(false); // Feature 007: Nullable for individual shares
+
         builder.Property(cs => cs.InvitedByUserId)
             .IsRequired();
 
@@ -65,9 +68,20 @@ public class CollectionShareConfiguration : IEntityTypeConfiguration<CollectionS
         // Index for finding shares by user
         builder.HasIndex(cs => new { cs.SharedWithUserId, cs.Status });
 
+        // Feature 007: Index for finding shares by group
+        builder.HasIndex(cs => cs.GroupId)
+            .HasFilter("[GroupId] IS NOT NULL");
+
+        // Feature 007: Index for group shares by collection
+        builder.HasIndex(cs => new { cs.CollectionId, cs.GroupId })
+            .HasFilter("[GroupId] IS NOT NULL");
+
         // Unique constraint to prevent duplicate active shares
         builder.HasIndex(cs => new { cs.CollectionId, cs.SharedWithUserId })
             .IsUnique()
             .HasFilter("[Status] = 1"); // Only enforce for Accepted status
+
+        // Computed property for IsGroupShare
+        builder.Ignore(cs => cs.IsGroupShare);
     }
 }

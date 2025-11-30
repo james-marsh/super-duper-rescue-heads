@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using SuperDuperRescueHeads.Api.Authorization;
 using SuperDuperRescueHeads.Api.Endpoints;
+using SuperDuperRescueHeads.Domain.Groups;
 using SuperDuperRescueHeads.Domain.Items;
 using SuperDuperRescueHeads.Domain.Search;
 using SuperDuperRescueHeads.Domain.Sharing;
@@ -29,6 +30,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Repositories
 builder.Services.AddScoped<IItemRepository, ItemRepository>();
 builder.Services.AddScoped<ICollectionShareRepository, CollectionShareRepository>();
+builder.Services.AddScoped<IUserGroupRepository, UserGroupRepository>();
 
 // Search (Feature 004)
 builder.Services.AddScoped<ISearchRepository, SearchRepository>();
@@ -36,6 +38,9 @@ builder.Services.AddScoped<ISearchService, SearchService>();
 
 // Sharing (Feature 006)
 builder.Services.AddScoped<IEmailService, EmailService>();
+
+// Group Sharing (Feature 007)
+builder.Services.AddScoped<IGroupSyncService, GroupSyncService>();
 
 // Hangfire for background jobs (Feature 003)
 builder.Services.AddHangfire(config => config
