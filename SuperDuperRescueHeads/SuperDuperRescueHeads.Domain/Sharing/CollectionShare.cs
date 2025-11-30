@@ -5,6 +5,7 @@ public class CollectionShare
     public Guid CollectionShareId { get; private set; }
     public Guid CollectionId { get; private set; }
     public Guid SharedWithUserId { get; private set; }
+    public Guid? GroupId { get; private set; } // Feature 007: Group sharing
     public Guid InvitedByUserId { get; private set; }
     public SharePermission Permission { get; private set; }
     public ShareStatus Status { get; private set; }
@@ -16,6 +17,9 @@ public class CollectionShare
     public DateTimeOffset? LastAccessedAt { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
+
+    // Computed property to identify group shares
+    public bool IsGroupShare => GroupId.HasValue;
 
     private CollectionShare()
     {
@@ -40,6 +44,9 @@ public class CollectionShare
         if (string.IsNullOrWhiteSpace(email))
             throw new ArgumentException("Email cannot be empty", nameof(email));
 
+        if (sharedWithUserId == Guid.Empty)
+            throw new ArgumentException("Shared with user ID cannot be empty", nameof(sharedWithUserId));
+
         if (invitedByUserId == sharedWithUserId)
             throw new InvalidOperationException("Cannot share collection with yourself");
 
@@ -52,12 +59,50 @@ public class CollectionShare
             CollectionId = collectionId,
             InvitedByUserId = invitedByUserId,
             SharedWithUserId = sharedWithUserId,
+            GroupId = null, // Individual share
             Email = email,
             Permission = permission,
             Status = ShareStatus.Pending,
             InvitationToken = token,
             InvitedAt = now,
             ExpiresAt = now.AddDays(7),
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+    }
+
+    // Feature 007: Factory method for group sharing
+    public static CollectionShare CreateGroupInvitation(
+        Guid collectionId,
+        Guid invitedByUserId,
+        Guid groupId,
+        SharePermission permission)
+    {
+        if (collectionId == Guid.Empty)
+            throw new ArgumentException("Collection ID cannot be empty", nameof(collectionId));
+
+        if (invitedByUserId == Guid.Empty)
+            throw new ArgumentException("Invited by user ID cannot be empty", nameof(invitedByUserId));
+
+        if (groupId == Guid.Empty)
+            throw new ArgumentException("Group ID cannot be empty", nameof(groupId));
+
+        var now = DateTimeOffset.UtcNow;
+
+        return new CollectionShare
+        {
+            CollectionShareId = Guid.NewGuid(),
+            CollectionId = collectionId,
+            InvitedByUserId = invitedByUserId,
+            SharedWithUserId = Guid.Empty, // No specific user for group shares
+            GroupId = groupId,
+            Email = string.Empty, // No email for group shares
+            Permission = permission,
+            Status = ShareStatus.Accepted, // Group shares are auto-accepted
+            InvitationToken = string.Empty, // No token needed for group shares
+            InvitedAt = now,
+            AcceptedAt = now,
+            ExpiresAt = DateTimeOffset.MaxValue, // Group shares don't expire
             CreatedAt = now,
             UpdatedAt = now
         };
