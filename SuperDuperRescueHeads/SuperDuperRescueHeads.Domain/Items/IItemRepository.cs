@@ -21,6 +21,9 @@ public interface IItemRepository
     Task UpdateAsync(Item item, CancellationToken cancellationToken = default);
     Task DeleteAsync(Item item, CancellationToken cancellationToken = default);
 
+    // Concurrency Control (Feature 009)
+    Task<Item?> TryReloadAsync(Guid itemId, CancellationToken cancellationToken = default);
+
     // Soft Delete Methods (Feature 003)
     Task<IReadOnlyList<Item>> GetDeletedItemsAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<Item?> GetDeletedItemByIdAsync(Guid itemId, CancellationToken cancellationToken = default);

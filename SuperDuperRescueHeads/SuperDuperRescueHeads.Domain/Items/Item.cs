@@ -17,6 +17,9 @@ public class Item
     public bool IsDeleted { get; private set; }
     public DateTimeOffset? DeletedAt { get; private set; }
 
+    // Optimistic Concurrency Control (Feature 009)
+    public byte[] RowVersion { get; private set; } = null!;
+
     // Navigation properties (EF Core)
     // public Collection Collection { get; private set; } = null!;
 
@@ -92,6 +95,9 @@ public class Item
         // For now, placeholder implementation
         throw new NotImplementedException("Requires Collection navigation property from Feature 001");
     }
+
+    // Feature 009: Get current version for concurrency control
+    public byte[] GetCurrentVersion() => RowVersion;
 
     // Soft Delete Methods (Feature 003)
     public void MarkAsDeleted()

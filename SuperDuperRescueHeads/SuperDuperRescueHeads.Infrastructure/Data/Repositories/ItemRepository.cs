@@ -90,6 +90,15 @@ public class ItemRepository : IItemRepository
         return Task.CompletedTask;
     }
 
+    // Concurrency Control (Feature 009)
+    public async Task<Item?> TryReloadAsync(Guid itemId, CancellationToken cancellationToken = default)
+    {
+        // Reload from database to get latest version
+        return await _context.Items
+            .AsNoTracking()
+            .FirstOrDefaultAsync(i => i.ItemId == itemId, cancellationToken);
+    }
+
     // Soft Delete Methods (Feature 003)
     public async Task<IReadOnlyList<Item>> GetDeletedItemsAsync(Guid userId, CancellationToken cancellationToken = default)
     {

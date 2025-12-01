@@ -36,6 +36,7 @@ builder.Services.AddScoped<IItemRepository, ItemRepository>();
 builder.Services.AddScoped<ICollectionShareRepository, CollectionShareRepository>();
 builder.Services.AddScoped<IUserGroupRepository, UserGroupRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<IConflictEventRepository, ConflictEventRepository>();
 
 // Search (Feature 004)
 builder.Services.AddScoped<ISearchRepository, SearchRepository>();
@@ -49,6 +50,9 @@ builder.Services.AddScoped<IGroupSyncService, GroupSyncService>();
 
 // Notifications (Feature 008)
 builder.Services.AddScoped<INotificationService, NotificationService>();
+
+// Concurrent Editing (Feature 009)
+builder.Services.AddScoped<IConflictResolutionService, ConflictResolutionService>();
 
 // Hangfire for background jobs (Feature 003)
 builder.Services.AddHangfire(config => config
