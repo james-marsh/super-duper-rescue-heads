@@ -2,8 +2,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using SuperDuperRescueHeads.Api.Authorization;
 using SuperDuperRescueHeads.Api.Endpoints;
+using SuperDuperRescueHeads.Api.Hubs;
 using SuperDuperRescueHeads.Domain.Groups;
 using SuperDuperRescueHeads.Domain.Items;
+using SuperDuperRescueHeads.Domain.Notifications;
 using SuperDuperRescueHeads.Domain.Search;
 using SuperDuperRescueHeads.Domain.Sharing;
 using SuperDuperRescueHeads.Infrastructure.Data;
@@ -20,6 +22,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddOpenApi();
 builder.Services.AddMemoryCache(); // Feature 007: For caching group memberships
+builder.Services.AddSignalR(); // Feature 008: Real-time notifications
 
 // Database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
@@ -32,6 +35,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped<IItemRepository, ItemRepository>();
 builder.Services.AddScoped<ICollectionShareRepository, CollectionShareRepository>();
 builder.Services.AddScoped<IUserGroupRepository, UserGroupRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
 // Search (Feature 004)
 builder.Services.AddScoped<ISearchRepository, SearchRepository>();
@@ -42,6 +46,9 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 
 // Group Sharing (Feature 007)
 builder.Services.AddScoped<IGroupSyncService, GroupSyncService>();
+
+// Notifications (Feature 008)
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 // Hangfire for background jobs (Feature 003)
 builder.Services.AddHangfire(config => config
@@ -87,6 +94,10 @@ app.MapSearchEndpoints(); // Feature 004
 app.MapCollectionSharingEndpoints(); // Feature 006
 app.MapGroupSharingEndpoints(); // Feature 007
 app.MapGroupMembershipWebhooks(); // Feature 007 - Webhooks for real-time sync
+app.MapNotificationEndpoints(); // Feature 008
+
+// Map SignalR hubs (Feature 008)
+app.MapHub<NotificationHub>("/hubs/notifications");
 
 // Schedule recurring jobs (Feature 003 - User Story 5)
 RecurringJob.AddOrUpdate<PurgeDeletedItemsJob>(
