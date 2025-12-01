@@ -59,6 +59,11 @@ public class ItemConfiguration : IEntityTypeConfiguration<Item>
         // Global Query Filter - Automatically exclude deleted items from queries
         builder.HasQueryFilter(i => !i.IsDeleted);
 
+        // Optimistic Concurrency Control (Feature 009)
+        builder.Property(i => i.RowVersion)
+            .IsRowVersion()
+            .IsRequired();
+
         // Indexes
         builder.HasIndex(i => i.CollectionId)
             .HasDatabaseName("IX_Items_CollectionId");

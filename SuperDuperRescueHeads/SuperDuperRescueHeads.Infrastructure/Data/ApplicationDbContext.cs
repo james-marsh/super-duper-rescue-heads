@@ -21,6 +21,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<GroupMember> GroupMembers => Set<GroupMember>();
     public DbSet<GroupSyncEvent> GroupSyncEvents => Set<GroupSyncEvent>();
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<ConflictEvent> ConflictEvents => Set<ConflictEvent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
