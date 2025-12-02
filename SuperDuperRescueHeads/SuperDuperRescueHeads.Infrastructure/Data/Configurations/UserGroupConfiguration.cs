@@ -34,10 +34,13 @@ public class UserGroupConfiguration : IEntityTypeConfiguration<UserGroup>
         // Index for group name searches
         builder.HasIndex(ug => ug.GroupName);
 
-        // Configure the Members collection
+        // Configure the Members collection using backing field
         builder.HasMany<GroupMember>("_members")
             .WithOne()
             .HasForeignKey(gm => gm.UserGroupId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Ignore the read-only Members property (we're using the backing field)
+        builder.Ignore(ug => ug.Members);
     }
 }
