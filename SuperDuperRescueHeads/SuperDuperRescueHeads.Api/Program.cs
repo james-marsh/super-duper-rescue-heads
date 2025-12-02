@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SuperDuperRescueHeads.Api.Authorization;
 using SuperDuperRescueHeads.Api.Endpoints;
 using SuperDuperRescueHeads.Api.Hubs;
+using SuperDuperRescueHeads.Api.Middleware;
 using SuperDuperRescueHeads.Domain.Groups;
 using SuperDuperRescueHeads.Domain.Items;
 using SuperDuperRescueHeads.Domain.Notifications;
@@ -80,6 +81,9 @@ builder.Services.AddScoped<IAuthorizationHandler, CollectionPermissionHandler>()
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+
+// Global exception handling middleware - must be early in pipeline
+app.UseMiddleware<GlobalExceptionMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
