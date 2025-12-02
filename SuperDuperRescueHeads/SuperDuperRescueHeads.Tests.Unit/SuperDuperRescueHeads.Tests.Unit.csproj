@@ -6,4 +6,12 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="TUnit" Version="0.2.241" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SuperDuperRescueHeads.Domain\SuperDuperRescueHeads.Domain.csproj" />
+  </ItemGroup>
+
 </Project>
