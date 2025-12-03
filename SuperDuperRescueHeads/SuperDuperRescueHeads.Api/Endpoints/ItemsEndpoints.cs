@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SuperDuperRescueHeads.Api.Models;
+using SuperDuperRescueHeads.Api.Services;
 using SuperDuperRescueHeads.Domain.Collections;
 using SuperDuperRescueHeads.Domain.Items;
 using SuperDuperRescueHeads.Domain.Shared;
@@ -12,20 +13,19 @@ public static class ItemsEndpoints
     {
         var group = app.MapGroup("/api/v1")
             .WithTags("Items")
-            .RequireAuthorization(); // TODO: Add authentication from Feature 001
+            .RequireAuthorization();
 
         // GET /api/v1/collections/{collectionId}/items
         group.MapGet("/collections/{collectionId:guid}/items", async (
             Guid collectionId,
             IItemRepository itemRepository,
             ICollectionRepository collectionRepository,
-            HttpContext context,
+            ICurrentUserService currentUserService,
             int skip = 0,
             int take = 100,
             CancellationToken cancellationToken = default) =>
         {
-            // TODO: Get from authenticated user context (Feature 001)
-            var userId = Guid.Empty;
+            var userId = currentUserService.GetUserId();
 
             // Verify collection exists and user has access
             var collection = await collectionRepository.GetByIdAsync(collectionId, cancellationToken);
@@ -77,11 +77,10 @@ public static class ItemsEndpoints
             CreateItemRequest request,
             IItemRepository itemRepository,
             ICollectionRepository collectionRepository,
-            HttpContext context,
+            ICurrentUserService currentUserService,
             CancellationToken cancellationToken = default) =>
         {
-            // TODO: Get from authenticated user context (Feature 001)
-            var userId = Guid.Empty;
+            var userId = currentUserService.GetUserId();
 
             // Verify collection exists and user has access
             var collection = await collectionRepository.GetByIdAsync(collectionId, cancellationToken);
@@ -125,11 +124,10 @@ public static class ItemsEndpoints
             Guid itemId,
             IItemRepository itemRepository,
             ICollectionRepository collectionRepository,
-            HttpContext context,
+            ICurrentUserService currentUserService,
             CancellationToken cancellationToken = default) =>
         {
-            // TODO: Get from authenticated user context (Feature 001)
-            var userId = Guid.Empty;
+            var userId = currentUserService.GetUserId();
 
             var item = await itemRepository.GetByIdAsync(itemId, cancellationToken);
             if (item == null)
@@ -166,11 +164,10 @@ public static class ItemsEndpoints
             UpdateItemRequest request,
             IItemRepository itemRepository,
             ICollectionRepository collectionRepository,
-            HttpContext context,
+            ICurrentUserService currentUserService,
             CancellationToken cancellationToken = default) =>
         {
-            // TODO: Get from authenticated user context (Feature 001)
-            var userId = Guid.Empty;
+            var userId = currentUserService.GetUserId();
 
             var item = await itemRepository.GetByIdAsync(itemId, cancellationToken);
             if (item == null)
@@ -223,11 +220,10 @@ public static class ItemsEndpoints
             Guid itemId,
             IItemRepository itemRepository,
             ICollectionRepository collectionRepository,
-            HttpContext context,
+            ICurrentUserService currentUserService,
             CancellationToken cancellationToken = default) =>
         {
-            // TODO: Get from authenticated user context (Feature 001)
-            var userId = Guid.Empty;
+            var userId = currentUserService.GetUserId();
 
             var item = await itemRepository.GetByIdAsync(itemId, cancellationToken);
             if (item == null)

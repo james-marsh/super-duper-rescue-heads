@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using SuperDuperRescueHeads.Api.Models;
+using SuperDuperRescueHeads.Api.Services;
+using SuperDuperRescueHeads.Domain.Collections;
+using SuperDuperRescueHeads.Domain.Shared;
 using SuperDuperRescueHeads.Domain.Sharing;
 
 namespace SuperDuperRescueHeads.Api.Endpoints;
@@ -17,14 +20,23 @@ public static class CollectionSharingEndpoints
             Guid collectionId,
             ShareCollectionRequest request,
             ICollectionShareRepository repository,
+            ICollectionRepository collectionRepository,
             IEmailService emailService,
-            HttpContext context,
+            ICurrentUserService currentUserService,
             CancellationToken cancellationToken) =>
         {
-            // TODO: Get current user ID from authentication context
-            var currentUserId = Guid.Empty;
+            var currentUserId = currentUserService.GetUserId();
 
-            // TODO: Validate that current user owns the collection
+            // Validate that current user owns the collection
+            var collection = await collectionRepository.GetByIdAsync(collectionId, cancellationToken);
+            if (collection == null)
+            {
+                return Results.NotFound(new { error = "Collection not found" });
+            }
+            if (!collection.IsOwnedBy(currentUserId))
+            {
+                throw new UnauthorizedException("collection", "share");
+            }
 
             // Check if user already has an active share
             var existingShare = await repository.HasActiveShareAsync(collectionId, request.SharedWithUserId, cancellationToken);
@@ -76,11 +88,10 @@ public static class CollectionSharingEndpoints
         // GET /api/v1/invitations/pending
         group.MapGet("/invitations/pending", async (
             ICollectionShareRepository repository,
-            HttpContext context,
+            ICurrentUserService currentUserService,
             CancellationToken cancellationToken) =>
         {
-            // TODO: Get current user ID from authentication context
-            var currentUserId = Guid.Empty;
+            var currentUserId = currentUserService.GetUserId();
 
             var shares = await repository.GetByUserIdAsync(currentUserId, cancellationToken);
             var pendingShares = shares.Where(s => s.Status == ShareStatus.Pending && s.ExpiresAt > DateTimeOffset.UtcNow).ToList();
@@ -191,14 +202,23 @@ public static class CollectionSharingEndpoints
             Guid collectionId,
             Guid userId,
             ICollectionShareRepository repository,
+            ICollectionRepository collectionRepository,
             IEmailService emailService,
-            HttpContext context,
+            ICurrentUserService currentUserService,
             CancellationToken cancellationToken) =>
         {
-            // TODO: Get current user ID from authentication context
-            var currentUserId = Guid.Empty;
+            var currentUserId = currentUserService.GetUserId();
 
-            // TODO: Verify that current user owns the collection
+            // Verify that current user owns the collection
+            var collection = await collectionRepository.GetByIdAsync(collectionId, cancellationToken);
+            if (collection == null)
+            {
+                return Results.NotFound(new { error = "Collection not found" });
+            }
+            if (!collection.IsOwnedBy(currentUserId))
+            {
+                throw new UnauthorizedException("collection", "remove collaborator from");
+            }
 
             var shares = await repository.GetByCollectionIdAsync(collectionId, cancellationToken);
             var share = shares.FirstOrDefault(s => s.SharedWithUserId == userId && s.Status == ShareStatus.Accepted);
@@ -229,14 +249,23 @@ public static class CollectionSharingEndpoints
             Guid userId,
             [FromBody] ChangePermissionRequest request,
             ICollectionShareRepository repository,
+            ICollectionRepository collectionRepository,
             IEmailService emailService,
-            HttpContext context,
+            ICurrentUserService currentUserService,
             CancellationToken cancellationToken) =>
         {
-            // TODO: Get current user ID from authentication context
-            var currentUserId = Guid.Empty;
+            var currentUserId = currentUserService.GetUserId();
 
-            // TODO: Verify that current user owns the collection
+            // Verify that current user owns the collection
+            var collection = await collectionRepository.GetByIdAsync(collectionId, cancellationToken);
+            if (collection == null)
+            {
+                return Results.NotFound(new { error = "Collection not found" });
+            }
+            if (!collection.IsOwnedBy(currentUserId))
+            {
+                throw new UnauthorizedException("collection", "change permissions for");
+            }
 
             var shares = await repository.GetByCollectionIdAsync(collectionId, cancellationToken);
             var share = shares.FirstOrDefault(s => s.SharedWithUserId == userId && s.Status == ShareStatus.Accepted);

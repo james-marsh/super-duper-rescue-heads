@@ -1,5 +1,8 @@
 using SuperDuperRescueHeads.Api.Models;
+using SuperDuperRescueHeads.Api.Services;
+using SuperDuperRescueHeads.Domain.Collections;
 using SuperDuperRescueHeads.Domain.Items;
+using SuperDuperRescueHeads.Domain.Shared;
 
 namespace SuperDuperRescueHeads.Api.Endpoints;
 
@@ -9,17 +12,16 @@ public static class DeletedItemsEndpoints
     {
         var group = app.MapGroup("/api/v1")
             .WithTags("Deleted Items")
-            .RequireAuthorization(); // TODO: Add authentication from Feature 001
+            .RequireAuthorization();
 
         // GET /api/v1/deleted-items
         // User Story 2: View Deleted Items
         group.MapGet("/deleted-items", async (
             IItemRepository repository,
-            HttpContext context,
+            ICurrentUserService currentUserService,
             CancellationToken cancellationToken) =>
         {
-            // TODO: Get userId from authenticated user
-            var userId = Guid.Empty; // Placeholder
+            var userId = currentUserService.GetUserId();
 
             var deletedItems = await repository.GetDeletedItemsAsync(userId, cancellationToken);
 
@@ -46,9 +48,12 @@ public static class DeletedItemsEndpoints
         group.MapPost("/deleted-items/{itemId:guid}/restore", async (
             Guid itemId,
             IItemRepository repository,
-            HttpContext context,
+            ICollectionRepository collectionRepository,
+            ICurrentUserService currentUserService,
             CancellationToken cancellationToken) =>
         {
+            var userId = currentUserService.GetUserId();
+
             var item = await repository.GetDeletedItemByIdAsync(itemId, cancellationToken);
 
             if (item == null)
@@ -56,7 +61,12 @@ public static class DeletedItemsEndpoints
                 return Results.NotFound(new { message = "Deleted item not found" });
             }
 
-            // TODO: Check if user owns this item via Collection navigation property
+            // Check if user owns this item via Collection navigation property
+            var collection = await collectionRepository.GetByIdAsync(item.CollectionId, cancellationToken);
+            if (collection == null || !collection.IsOwnedBy(userId))
+            {
+                throw new UnauthorizedException("item", "restore");
+            }
 
             item.Restore();
             await repository.UpdateAsync(item, cancellationToken);
@@ -86,9 +96,12 @@ public static class DeletedItemsEndpoints
         group.MapPost("/deleted-items/{itemId:guid}/purge", async (
             Guid itemId,
             IItemRepository repository,
-            HttpContext context,
+            ICollectionRepository collectionRepository,
+            ICurrentUserService currentUserService,
             CancellationToken cancellationToken) =>
         {
+            var userId = currentUserService.GetUserId();
+
             var item = await repository.GetDeletedItemByIdAsync(itemId, cancellationToken);
 
             if (item == null)
@@ -96,7 +109,12 @@ public static class DeletedItemsEndpoints
                 return Results.NotFound(new { message = "Deleted item not found" });
             }
 
-            // TODO: Check if user owns this item via Collection navigation property
+            // Check if user owns this item via Collection navigation property
+            var collection = await collectionRepository.GetByIdAsync(item.CollectionId, cancellationToken);
+            if (collection == null || !collection.IsOwnedBy(userId))
+            {
+                throw new UnauthorizedException("item", "purge");
+            }
 
             await repository.PurgeAsync(itemId, cancellationToken);
             await repository.SaveChangesAsync(cancellationToken);

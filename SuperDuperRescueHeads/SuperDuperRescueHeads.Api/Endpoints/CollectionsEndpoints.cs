@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SuperDuperRescueHeads.Api.Models;
+using SuperDuperRescueHeads.Api.Services;
 using SuperDuperRescueHeads.Domain.Collections;
 using SuperDuperRescueHeads.Domain.Shared;
 
@@ -16,11 +17,10 @@ public static class CollectionsEndpoints
         // GET /api/v1/collections - List all collections for current user
         group.MapGet("", async (
             ICollectionRepository repository,
-            HttpContext context,
+            ICurrentUserService currentUserService,
             CancellationToken cancellationToken) =>
         {
-            // TODO: Get from authenticated user context (Feature 001)
-            var userId = Guid.Empty;
+            var userId = currentUserService.GetUserId();
 
             var collections = await repository.GetByOwnerIdAsync(userId, cancellationToken);
 
@@ -44,10 +44,10 @@ public static class CollectionsEndpoints
         group.MapPost("", async (
             CreateCollectionRequest request,
             ICollectionRepository repository,
+            ICurrentUserService currentUserService,
             CancellationToken cancellationToken) =>
         {
-            // TODO: Get from authenticated user context (Feature 001)
-            var userId = Guid.Empty;
+            var userId = currentUserService.GetUserId();
 
             var collectionName = CollectionName.Create(request.Name);
             var collection = Collection.Create(userId, collectionName, request.Description);
@@ -75,11 +75,10 @@ public static class CollectionsEndpoints
         group.MapGet("{collectionId:guid}", async (
             Guid collectionId,
             ICollectionRepository repository,
-            HttpContext context,
+            ICurrentUserService currentUserService,
             CancellationToken cancellationToken) =>
         {
-            // TODO: Get from authenticated user context (Feature 001)
-            var userId = Guid.Empty;
+            var userId = currentUserService.GetUserId();
 
             var collection = await repository.GetByIdAsync(collectionId, cancellationToken);
 
@@ -111,11 +110,10 @@ public static class CollectionsEndpoints
             Guid collectionId,
             UpdateCollectionRequest request,
             ICollectionRepository repository,
-            HttpContext context,
+            ICurrentUserService currentUserService,
             CancellationToken cancellationToken) =>
         {
-            // TODO: Get from authenticated user context (Feature 001)
-            var userId = Guid.Empty;
+            var userId = currentUserService.GetUserId();
 
             var collection = await repository.GetByIdAsync(collectionId, cancellationToken);
 
@@ -160,11 +158,10 @@ public static class CollectionsEndpoints
         group.MapDelete("{collectionId:guid}", async (
             Guid collectionId,
             ICollectionRepository repository,
-            HttpContext context,
+            ICurrentUserService currentUserService,
             CancellationToken cancellationToken) =>
         {
-            // TODO: Get from authenticated user context (Feature 001)
-            var userId = Guid.Empty;
+            var userId = currentUserService.GetUserId();
 
             var collection = await repository.GetByIdAsync(collectionId, cancellationToken);
 
