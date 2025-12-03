@@ -171,6 +171,7 @@ app.UseAuthentication(); // Feature 001: JWT authentication
 app.UseAuthorization();
 
 // Map API endpoints
+app.MapAuthenticationEndpoints(); // Feature 001 - Authentication
 app.MapCollectionsEndpoints(); // Feature 001 - Collection CRUD
 app.MapItemsEndpoints();
 app.MapDeletedItemsEndpoints();
