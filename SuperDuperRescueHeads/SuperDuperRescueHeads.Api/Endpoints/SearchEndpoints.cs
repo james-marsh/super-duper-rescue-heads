@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using SuperDuperRescueHeads.Api.Services;
 using SuperDuperRescueHeads.Domain.Search;
 
 namespace SuperDuperRescueHeads.Api.Endpoints;
@@ -15,7 +16,7 @@ public static class SearchEndpoints
         group.MapGet("", async (
             [FromQuery] string q,
             ISearchService searchService,
-            HttpContext context,
+            ICurrentUserService currentUserService,
             CancellationToken ct,
             [FromQuery] Guid? collectionId = null,
             [FromQuery] DateTimeOffset? startDate = null,
@@ -23,7 +24,7 @@ public static class SearchEndpoints
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 20) =>
         {
-            var userId = Guid.Empty; // TODO: Get from claims when authentication is implemented
+            var userId = currentUserService.GetUserId();
 
             var query = new SearchQuery
             {
@@ -67,7 +68,7 @@ public static class SearchEndpoints
         group.MapGet("/suggestions", async (
             [FromQuery] string prefix,
             ISearchService searchService,
-            HttpContext context,
+            ICurrentUserService currentUserService,
             CancellationToken ct,
             [FromQuery] int limit = 5) =>
         {
@@ -83,7 +84,7 @@ public static class SearchEndpoints
                 });
             }
 
-            var userId = Guid.Empty; // TODO: Get from claims when authentication is implemented
+            var userId = currentUserService.GetUserId();
             var suggestions = await searchService.GetSuggestionsAsync(prefix, userId, ct);
 
             return Results.Ok(new { suggestions });
@@ -97,10 +98,10 @@ public static class SearchEndpoints
         // GET /api/v1/search/recent
         group.MapGet("/recent", async (
             ISearchService searchService,
-            HttpContext context,
+            ICurrentUserService currentUserService,
             CancellationToken ct) =>
         {
-            var userId = Guid.Empty; // TODO: Get from claims when authentication is implemented
+            var userId = currentUserService.GetUserId();
             var recentSearches = await searchService.GetRecentSearchesAsync(userId, ct);
 
             return Results.Ok(new { recentSearches });

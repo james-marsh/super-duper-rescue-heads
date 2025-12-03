@@ -42,7 +42,8 @@
       "SlashCommand(/speckit.tasks)",
       "Bash(gh pr view:*)",
       "Bash(git branch:*)",
-      "Bash(SPECIFY_FEATURE=\"007-group-sharing\" pwsh:*)"
+      "Bash(SPECIFY_FEATURE=\"007-group-sharing\" pwsh:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,17 +1,25 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using SuperDuperRescueHeads.Api.Authorization;
 using SuperDuperRescueHeads.Api.Endpoints;
 using SuperDuperRescueHeads.Api.Hubs;
 using SuperDuperRescueHeads.Api.Middleware;
+using SuperDuperRescueHeads.Api.Services;
+using SuperDuperRescueHeads.Domain.Collections;
 using SuperDuperRescueHeads.Domain.Groups;
 using SuperDuperRescueHeads.Domain.Items;
 using SuperDuperRescueHeads.Domain.Notifications;
 using SuperDuperRescueHeads.Domain.Search;
 using SuperDuperRescueHeads.Domain.Sharing;
+using SuperDuperRescueHeads.Domain.Users;
 using SuperDuperRescueHeads.Infrastructure.Data;
 using SuperDuperRescueHeads.Infrastructure.Data.Repositories;
 using SuperDuperRescueHeads.Infrastructure.BackgroundJobs;
+using SuperDuperRescueHeads.Infrastructure.Identity;
 using SuperDuperRescueHeads.Infrastructure.Repositories;
 using SuperDuperRescueHeads.Infrastructure.Search;
 using SuperDuperRescueHeads.Infrastructure.Services;
@@ -32,12 +40,78 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
+// Identity (Feature 001)
+builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
+{
+    // Password settings
+    options.Password.RequireDigit = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireNonAlphanumeric = true;
+    options.Password.RequiredLength = 8;
+
+    // Lockout settings
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.AllowedForNewUsers = true;
+
+    // User settings
+    options.User.RequireUniqueEmail = true;
+})
+.AddEntityFrameworkStores<ApplicationDbContext>()
+.AddDefaultTokenProviders();
+
+// JWT Authentication (Feature 001)
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]!)),
+        ClockSkew = TimeSpan.Zero
+    };
+
+    // SignalR JWT support (Feature 008)
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+            {
+                context.Token = accessToken;
+            }
+
+            return Task.CompletedTask;
+        }
+    };
+});
+
 // Repositories
+builder.Services.AddScoped<IUserRepository, UserRepository>(); // Feature 001
+builder.Services.AddScoped<ICollectionRepository, CollectionRepository>();
 builder.Services.AddScoped<IItemRepository, ItemRepository>();
 builder.Services.AddScoped<ICollectionShareRepository, CollectionShareRepository>();
 builder.Services.AddScoped<IUserGroupRepository, UserGroupRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IConflictEventRepository, ConflictEventRepository>();
+
+// Authentication Services (Feature 001)
+builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 // Search (Feature 004)
 builder.Services.AddScoped<ISearchRepository, SearchRepository>();
@@ -93,9 +167,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseAuthentication(); // Feature 001: JWT authentication
 app.UseAuthorization();
 
 // Map API endpoints
+app.MapAuthenticationEndpoints(); // Feature 001 - Authentication
+app.MapCollectionsEndpoints(); // Feature 001 - Collection CRUD
 app.MapItemsEndpoints();
 app.MapDeletedItemsEndpoints();
 app.MapSearchEndpoints(); // Feature 004

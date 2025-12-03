@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using SuperDuperRescueHeads.Api.Models;
+using SuperDuperRescueHeads.Api.Services;
+using SuperDuperRescueHeads.Domain.Collections;
 using SuperDuperRescueHeads.Domain.Groups;
+using SuperDuperRescueHeads.Domain.Shared;
 using SuperDuperRescueHeads.Domain.Sharing;
 
 namespace SuperDuperRescueHeads.Api.Endpoints;
@@ -18,14 +21,23 @@ public static class GroupSharingEndpoints
             Guid collectionId,
             ShareWithGroupRequest request,
             ICollectionShareRepository shareRepository,
+            ICollectionRepository collectionRepository,
             IUserGroupRepository groupRepository,
-            HttpContext context,
+            ICurrentUserService currentUserService,
             CancellationToken cancellationToken) =>
         {
-            // TODO: Get current user ID from authentication context
-            var currentUserId = Guid.Empty;
+            var currentUserId = currentUserService.GetUserId();
 
-            // TODO: Verify that current user owns the collection
+            // Verify that current user owns the collection
+            var collection = await collectionRepository.GetByIdAsync(collectionId, cancellationToken);
+            if (collection == null)
+            {
+                return Results.NotFound(new { error = "Collection not found" });
+            }
+            if (!collection.IsOwnedBy(currentUserId))
+            {
+                throw new UnauthorizedException("collection", "share with group");
+            }
 
             // Verify the group exists
             var userGroup = await groupRepository.GetByIdAsync(request.GroupId, cancellationToken);
@@ -68,13 +80,12 @@ public static class GroupSharingEndpoints
         // GET /api/v1/groups
         group.MapGet("/groups", async (
             IUserGroupRepository groupRepository,
-            HttpContext context,
+            ICurrentUserService currentUserService,
             CancellationToken cancellationToken,
             [FromQuery] int skip = 0,
             [FromQuery] int take = 20) =>
         {
-            // TODO: Get current user ID from authentication context
-            var currentUserId = Guid.Empty;
+            var currentUserId = currentUserService.GetUserId();
 
             // Get groups the current user is a member of
             var groups = await groupRepository.GetByUserIdAsync(currentUserId, cancellationToken);
@@ -97,11 +108,23 @@ public static class GroupSharingEndpoints
         group.MapGet("/collections/{collectionId:guid}/shares/groups", async (
             Guid collectionId,
             ICollectionShareRepository shareRepository,
+            ICollectionRepository collectionRepository,
             IUserGroupRepository groupRepository,
-            HttpContext context,
+            ICurrentUserService currentUserService,
             CancellationToken cancellationToken) =>
         {
-            // TODO: Verify that current user owns or has access to the collection
+            var currentUserId = currentUserService.GetUserId();
+
+            // Verify that current user owns or has access to the collection
+            var collection = await collectionRepository.GetByIdAsync(collectionId, cancellationToken);
+            if (collection == null)
+            {
+                return Results.NotFound(new { error = "Collection not found" });
+            }
+            if (!collection.IsOwnedBy(currentUserId))
+            {
+                throw new UnauthorizedException("collection", "view shares for");
+            }
 
             var groupShares = await shareRepository.GetGroupSharesByCollectionIdAsync(collectionId, cancellationToken);
 
@@ -138,10 +161,22 @@ public static class GroupSharingEndpoints
             Guid groupId,
             [FromBody] ShareWithGroupRequest request,
             ICollectionShareRepository shareRepository,
-            HttpContext context,
+            ICollectionRepository collectionRepository,
+            ICurrentUserService currentUserService,
             CancellationToken cancellationToken) =>
         {
-            // TODO: Verify current user owns the collection
+            var currentUserId = currentUserService.GetUserId();
+
+            // Verify current user owns the collection
+            var collection = await collectionRepository.GetByIdAsync(collectionId, cancellationToken);
+            if (collection == null)
+            {
+                return Results.NotFound(new { error = "Collection not found" });
+            }
+            if (!collection.IsOwnedBy(currentUserId))
+            {
+                throw new UnauthorizedException("collection", "change group permissions for");
+            }
 
             var groupShares = await shareRepository.GetGroupSharesByCollectionIdAsync(collectionId, cancellationToken);
             var share = groupShares.FirstOrDefault(s => s.GroupId == groupId);
@@ -165,10 +200,22 @@ public static class GroupSharingEndpoints
             Guid collectionId,
             Guid groupId,
             ICollectionShareRepository shareRepository,
-            HttpContext context,
+            ICollectionRepository collectionRepository,
+            ICurrentUserService currentUserService,
             CancellationToken cancellationToken) =>
         {
-            // TODO: Verify current user owns the collection
+            var currentUserId = currentUserService.GetUserId();
+
+            // Verify current user owns the collection
+            var collection = await collectionRepository.GetByIdAsync(collectionId, cancellationToken);
+            if (collection == null)
+            {
+                return Results.NotFound(new { error = "Collection not found" });
+            }
+            if (!collection.IsOwnedBy(currentUserId))
+            {
+                throw new UnauthorizedException("collection", "revoke group access from");
+            }
 
             var groupShares = await shareRepository.GetGroupSharesByCollectionIdAsync(collectionId, cancellationToken);
             var share = groupShares.FirstOrDefault(s => s.GroupId == groupId);
@@ -191,11 +238,10 @@ public static class GroupSharingEndpoints
             Guid collectionId,
             ICollectionShareRepository shareRepository,
             IUserGroupRepository groupRepository,
-            HttpContext context,
+            ICurrentUserService currentUserService,
             CancellationToken cancellationToken) =>
         {
-            // TODO: Get current user ID from authentication context
-            var currentUserId = Guid.Empty;
+            var currentUserId = currentUserService.GetUserId();
 
             var allShares = await shareRepository.GetByCollectionIdAsync(collectionId, cancellationToken);
 
