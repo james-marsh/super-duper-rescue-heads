@@ -1,20 +1,44 @@
 ﻿@inherits LayoutComponentBase
+@using SuperDuperRescueHeads.Web.Services
+@inject IAuthenticationService AuthService
+@inject CustomAuthStateProvider AuthStateProvider
+@inject NavigationManager Navigation
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
-
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+<CascadingAuthenticationState>
+    <div class="page">
+        <div class="sidebar">
+            <NavMenu />
         </div>
 
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
+        <main>
+            <div class="top-row px-4">
+                <AuthorizeView>
+                    <Authorized>
+                        <span class="me-3">Welcome, @context.User.Identity?.Name!</span>
+                        <button class="btn btn-sm btn-outline-secondary" @onclick="HandleLogout">Logout</button>
+                    </Authorized>
+                    <NotAuthorized>
+                        <a href="/login" class="btn btn-sm btn-primary me-2">Login</a>
+                        <a href="/register" class="btn btn-sm btn-outline-primary">Register</a>
+                    </NotAuthorized>
+                </AuthorizeView>
+            </div>
+
+            <article class="content px-4">
+                @Body
+            </article>
+        </main>
+    </div>
+</CascadingAuthenticationState>
+
+@code {
+    private async Task HandleLogout()
+    {
+        await AuthService.LogoutAsync();
+        AuthStateProvider.NotifyUserLogout();
+        Navigation.NavigateTo("/login");
+    }
+}
 
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.

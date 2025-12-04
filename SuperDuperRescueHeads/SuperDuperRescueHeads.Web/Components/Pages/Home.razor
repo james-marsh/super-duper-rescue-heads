@@ -1,7 +1,63 @@
-﻿@page "/"
+@page "/"
+@rendermode InteractiveServer
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Home - SuperDuperRescueHeads</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="container mt-4">
+    <div class="jumbotron bg-light p-5 rounded-3">
+        <h1 class="display-4">Welcome to SuperDuperRescueHeads!</h1>
+        <p class="lead">Manage your collections and items with ease.</p>
+        <hr class="my-4" />
+        <p>Organize your items into collections, share with others, and keep everything in one place.</p>
+        <AuthorizeView>
+            <Authorized>
+                <a class="btn btn-primary btn-lg" href="/collections" role="button">
+                    <i class="bi bi-collection-fill"></i> View My Collections
+                </a>
+            </Authorized>
+            <NotAuthorized>
+                <div class="d-flex gap-2">
+                    <a class="btn btn-primary btn-lg" href="/register" role="button">
+                        <i class="bi bi-person-plus-fill"></i> Get Started
+                    </a>
+                    <a class="btn btn-outline-primary btn-lg" href="/login" role="button">
+                        <i class="bi bi-box-arrow-in-right"></i> Login
+                    </a>
+                </div>
+            </NotAuthorized>
+        </AuthorizeView>
+    </div>
 
-Welcome to your new app.
+    <div class="row mt-5">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-collection-fill text-primary"></i> Collections
+                    </h5>
+                    <p class="card-text">Organize your items into custom collections. Create, edit, and manage collections with ease.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-share-fill text-success"></i> Sharing
+                    </h5>
+                    <p class="card-text">Share your collections with other users or groups. Collaborate and manage access permissions.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-search text-info"></i> Search
+                    </h5>
+                    <p class="card-text">Quickly find items across all your collections with powerful search capabilities.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
