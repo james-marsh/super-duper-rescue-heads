@@ -3,6 +3,7 @@ using SuperDuperRescueHeads.Api.Models;
 using SuperDuperRescueHeads.Api.Services;
 using SuperDuperRescueHeads.Domain.Shared;
 using SuperDuperRescueHeads.Domain.Users;
+using SuperDuperRescueHeads.Infrastructure.Data;
 using SuperDuperRescueHeads.Infrastructure.Identity;
 
 namespace SuperDuperRescueHeads.Api.Endpoints;
@@ -50,53 +51,69 @@ public static class AuthenticationEndpoints
         UserManager<ApplicationUser> userManager,
         IUserRepository userRepository,
         IJwtTokenService jwtTokenService,
+        ApplicationDbContext dbContext,
         CancellationToken cancellationToken)
     {
         // Validate and create value objects
         var email = Email.Create(request.Email);
         var displayName = DisplayName.Create(request.DisplayName);
 
-        // Create domain user
-        var domainUser = User.Create(email, displayName);
-        await userRepository.AddAsync(domainUser, cancellationToken);
-        await userRepository.SaveChangesAsync(cancellationToken);
+        // Use a database transaction to ensure atomicity of both user creations
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-        // Create identity user
-        var identityUser = new ApplicationUser
+        try
         {
-            Id = Guid.NewGuid(),
-            UserName = request.Email,
-            Email = request.Email,
-            DisplayName = request.DisplayName,
-            DomainUserId = domainUser.UserId,
-            CreatedAt = DateTimeOffset.UtcNow,
-            IsActive = true
-        };
+            // Create domain user (not yet saved)
+            var domainUser = User.Create(email, displayName);
 
-        var result = await userManager.CreateAsync(identityUser, request.Password);
+            // Create identity user with reference to domain user
+            var identityUser = new ApplicationUser
+            {
+                Id = Guid.NewGuid(),
+                UserName = request.Email,
+                Email = request.Email,
+                DisplayName = request.DisplayName,
+                DomainUserId = domainUser.UserId,
+                CreatedAt = DateTimeOffset.UtcNow,
+                IsActive = true
+            };
 
-        if (!result.Succeeded)
-        {
-            // Rollback domain user if identity creation fails
-            // In production, this should be in a transaction
-            throw new ValidationException(
-                result.Errors.ToDictionary(
-                    e => e.Code,
-                    e => new[] { e.Description }
-                )
-            );
+            // Create identity user first (performs validation: unique email, password strength, etc.)
+            var result = await userManager.CreateAsync(identityUser, request.Password);
+
+            if (!result.Succeeded)
+            {
+                throw new ValidationException(
+                    result.Errors.ToDictionary(
+                        e => e.Code,
+                        e => new[] { e.Description }
+                    )
+                );
+            }
+
+            // Create domain user - if this fails, the entire transaction will rollback
+            await userRepository.AddAsync(domainUser, cancellationToken);
+            await userRepository.SaveChangesAsync(cancellationToken);
+
+            // Commit transaction - both users are now persisted atomically
+            await transaction.CommitAsync(cancellationToken);
+
+            var token = await jwtTokenService.GenerateTokenAsync(identityUser);
+
+            return Results.Created($"/api/v1/auth/me", new AuthenticationResponse
+            {
+                Token = token,
+                UserId = domainUser.UserId,
+                Email = identityUser.Email!,
+                DisplayName = identityUser.DisplayName,
+                ExpiresAt = DateTimeOffset.UtcNow.AddHours(8)
+            });
         }
-
-        var token = await jwtTokenService.GenerateTokenAsync(identityUser);
-
-        return Results.Created($"/api/v1/auth/me", new AuthenticationResponse
+        catch
         {
-            Token = token,
-            UserId = domainUser.UserId,
-            Email = identityUser.Email!,
-            DisplayName = identityUser.DisplayName,
-            ExpiresAt = DateTimeOffset.UtcNow.AddHours(8)
-        });
+            // Transaction will be rolled back automatically when disposed
+            throw;
+        }
     }
 
     private static async Task<IResult> LoginAsync(
