@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using Microsoft.Extensions.Logging;
 
 namespace SuperDuperRescueHeads.Web.Services;
 
@@ -14,10 +15,12 @@ public interface ICollectionService
 public class CollectionService : ICollectionService
 {
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly ILogger<CollectionService> _logger;
 
-    public CollectionService(IHttpClientFactory httpClientFactory)
+    public CollectionService(IHttpClientFactory httpClientFactory, ILogger<CollectionService> logger)
     {
         _httpClientFactory = httpClientFactory;
+        _logger = logger;
     }
 
     public async Task<List<CollectionDto>> GetCollectionsAsync()
@@ -32,8 +35,9 @@ public class CollectionService : ICollectionService
 
             return await response.Content.ReadFromJsonAsync<List<CollectionDto>>() ?? new List<CollectionDto>();
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Error occurred while retrieving collections list");
             return new List<CollectionDto>();
         }
     }
@@ -50,8 +54,9 @@ public class CollectionService : ICollectionService
 
             return await response.Content.ReadFromJsonAsync<CollectionDto>();
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Error occurred while retrieving collection {CollectionId}", collectionId);
             return null;
         }
     }
@@ -68,8 +73,9 @@ public class CollectionService : ICollectionService
 
             return await response.Content.ReadFromJsonAsync<CollectionDto>();
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Error occurred while creating collection {CollectionName}", request.Name);
             return null;
         }
     }
@@ -82,8 +88,9 @@ public class CollectionService : ICollectionService
             var response = await client.PutAsJsonAsync($"/api/v1/collections/{collectionId}", request);
             return response.IsSuccessStatusCode;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Error occurred while updating collection {CollectionId}", collectionId);
             return false;
         }
     }
@@ -96,8 +103,9 @@ public class CollectionService : ICollectionService
             var response = await client.DeleteAsync($"/api/v1/collections/{collectionId}");
             return response.IsSuccessStatusCode;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Error occurred while deleting collection {CollectionId}", collectionId);
             return false;
         }
     }

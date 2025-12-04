@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using Microsoft.Extensions.Logging;
 
 namespace SuperDuperRescueHeads.Web.Services;
 
@@ -18,13 +19,18 @@ public class AuthenticationService : IAuthenticationService
 {
     private readonly HttpClient _httpClient;
     private readonly ProtectedSessionStorage _sessionStorage;
+    private readonly ILogger<AuthenticationService> _logger;
     private const string TokenKey = "authToken";
     private const string UserInfoKey = "userInfo";
 
-    public AuthenticationService(HttpClient httpClient, ProtectedSessionStorage sessionStorage)
+    public AuthenticationService(
+        HttpClient httpClient,
+        ProtectedSessionStorage sessionStorage,
+        ILogger<AuthenticationService> logger)
     {
         _httpClient = httpClient;
         _sessionStorage = sessionStorage;
+        _logger = logger;
     }
 
     public async Task<AuthenticationResponse?> LoginAsync(LoginRequest request)
@@ -50,8 +56,9 @@ public class AuthenticationService : IAuthenticationService
 
             return authResponse;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Error occurred during login for user {Email}", request.Email);
             return null;
         }
     }
@@ -79,8 +86,9 @@ public class AuthenticationService : IAuthenticationService
 
             return authResponse;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Error occurred during registration for user {Email}", request.Email);
             return null;
         }
     }
@@ -98,8 +106,9 @@ public class AuthenticationService : IAuthenticationService
             var result = await _sessionStorage.GetAsync<string>(TokenKey);
             return result.Success ? result.Value : null;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Error occurred while retrieving authentication token from session storage");
             return null;
         }
     }
@@ -111,8 +120,9 @@ public class AuthenticationService : IAuthenticationService
             var result = await _sessionStorage.GetAsync<UserInfo>(UserInfoKey);
             return result.Success ? result.Value ?? UserInfo.Anonymous : UserInfo.Anonymous;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Error occurred while retrieving user info from session storage");
             return UserInfo.Anonymous;
         }
     }
