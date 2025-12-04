@@ -1,4 +1,5 @@
 using System.Text.Json;
+using SuperDuperRescueHeads.Domain.Collections;
 
 namespace SuperDuperRescueHeads.Domain.Items;
 
@@ -21,7 +22,7 @@ public class Item
     public byte[] RowVersion { get; private set; } = null!;
 
     // Navigation properties (EF Core)
-    // public Collection Collection { get; private set; } = null!;
+    public Collection Collection { get; private set; } = null!;
 
     // Domain events
     private readonly List<DomainEvent> _domainEvents = new();
@@ -91,9 +92,8 @@ public class Item
 
     public bool BelongsToUser(Guid userId)
     {
-        // This would check via Collection.OwnerId navigation property
-        // For now, placeholder implementation
-        throw new NotImplementedException("Requires Collection navigation property from Feature 001");
+        // Check via Collection.OwnerId navigation property
+        return Collection?.OwnerId == userId;
     }
 
     // Feature 009: Get current version for concurrency control

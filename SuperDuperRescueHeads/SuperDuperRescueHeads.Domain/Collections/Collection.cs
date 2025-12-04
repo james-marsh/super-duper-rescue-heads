@@ -10,6 +10,7 @@ public class Collection
     public Guid CollectionId { get; private set; }
     public Guid OwnerId { get; private set; } // User who owns this collection
     public CollectionName Name { get; private set; } = null!;
+    public ItemType ItemType { get; private set; } = null!;
     public string? Description { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
@@ -31,21 +32,22 @@ public class Collection
     // EF Core constructor
     private Collection() { }
 
-    private Collection(Guid collectionId, Guid ownerId, CollectionName name, string? description)
+    private Collection(Guid collectionId, Guid ownerId, CollectionName name, ItemType itemType, string? description)
     {
         CollectionId = collectionId;
         OwnerId = ownerId;
         Name = name;
+        ItemType = itemType;
         Description = description;
         CreatedAt = DateTimeOffset.UtcNow;
         UpdatedAt = CreatedAt;
         IsDeleted = false;
     }
 
-    public static Collection Create(Guid ownerId, CollectionName name, string? description = null)
+    public static Collection Create(Guid ownerId, CollectionName name, ItemType itemType, string? description = null)
     {
         var collectionId = Guid.NewGuid();
-        var collection = new Collection(collectionId, ownerId, name, description);
+        var collection = new Collection(collectionId, ownerId, name, itemType, description);
 
         collection.AddDomainEvent(new CollectionCreatedEvent(collectionId, ownerId, name.Value, collection.CreatedAt));
 

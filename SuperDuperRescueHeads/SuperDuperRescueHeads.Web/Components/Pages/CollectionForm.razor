@@ -43,6 +43,26 @@
                             </div>
 
                             <div class="mb-3">
+                                <label for="itemType" class="form-label">Item Type</label>
+                                @if (IsEditMode)
+                                {
+                                    <input id="itemType" class="form-control" value="@model.ItemType" disabled />
+                                    <small class="form-text text-muted">Item type cannot be changed after creation</small>
+                                }
+                                else
+                                {
+                                    <InputSelect id="itemType" class="form-select" @bind-Value="model.ItemType">
+                                        <option value="">-- Select Item Type --</option>
+                                        @foreach (var type in ItemTypes)
+                                        {
+                                            <option value="@type">@type</option>
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="() => model.ItemType" />
+                                }
+                            </div>
+
+                            <div class="mb-3">
                                 <label for="description" class="form-label">Description (Optional)</label>
                                 <InputTextArea id="description" class="form-control" rows="4" @bind-Value="model.Description" />
                                 <ValidationMessage For="() => model.Description" />
@@ -76,6 +96,12 @@
     private bool isSaving = false;
     private string? errorMessage;
 
+    private static readonly string[] ItemTypes = new[]
+    {
+        "Comic Book", "Puzzle", "Vinyl Record", "Trading Card", "Video Game",
+        "Board Game", "Book", "Movie", "Toy", "Collectible", "Other"
+    };
+
     protected override async Task OnInitializedAsync()
     {
         if (IsEditMode)
@@ -100,6 +126,7 @@
             }
 
             model.Name = collection.Name;
+            model.ItemType = collection.ItemType;
             model.Description = collection.Description;
         }
         catch (Exception ex)
@@ -135,7 +162,7 @@
             }
             else
             {
-                var request = new CreateCollectionRequest(model.Name, model.Description);
+                var request = new CreateCollectionRequest(model.Name, model.ItemType, model.Description);
                 var result = await CollectionService.CreateCollectionAsync(request);
 
                 if (result != null)
@@ -163,6 +190,9 @@
         [Required(ErrorMessage = "Collection name is required")]
         [StringLength(200, MinimumLength = 1, ErrorMessage = "Name must be between 1 and 200 characters")]
         public string Name { get; set; } = "";
+
+        [Required(ErrorMessage = "Item type is required")]
+        public string ItemType { get; set; } = "";
 
         [StringLength(1000, ErrorMessage = "Description cannot exceed 1000 characters")]
         public string? Description { get; set; }

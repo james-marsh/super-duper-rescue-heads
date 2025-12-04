@@ -115,6 +115,7 @@ public class CollectionService : ICollectionService
 public record CollectionDto(
     Guid CollectionId,
     string Name,
+    string ItemType,
     string? Description,
     Guid OwnerId,
     DateTime CreatedAt,
@@ -122,5 +123,5 @@ public record CollectionDto(
     int ItemCount
 );
 
-public record CreateCollectionRequest(string Name, string? Description);
+public record CreateCollectionRequest(string Name, string ItemType, string? Description);
 public record UpdateCollectionRequest(string Name, string? Description);

@@ -1,0 +1,202 @@
+@page "/collections/{CollectionId:guid}/items/create"
+@page "/collections/{CollectionId:guid}/items/{ItemId:guid}/edit"
+@rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
+@using SuperDuperRescueHeads.Web.Services
+@inject IItemService ItemService
+@inject ICollectionService CollectionService
+@inject NavigationManager Navigation
+@attribute [Authorize]
+
+<PageTitle>@(IsEditMode ? "Edit Item" : "Add Item")</PageTitle>
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">@(IsEditMode ? "Edit Item" : "Add New Item")</h3>
+
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            @errorMessage
+                        </div>
+                    }
+
+                    @if (isLoading)
+                    {
+                        <div class="text-center py-4">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <EditForm Model="model" OnValidSubmit="HandleSubmit">
+                            <DataAnnotationsValidator />
+
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Item Name</label>
+                                <InputText id="name" class="form-control" @bind-Value="model.Name" />
+                                <ValidationMessage For="() => model.Name" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">Notes (Optional)</label>
+                                <InputTextArea id="notes" class="form-control" rows="4" @bind-Value="model.Notes" />
+                                <ValidationMessage For="() => model.Notes" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="acquisitionDate" class="form-label">Acquisition Date (Optional)</label>
+                                <InputDate id="acquisitionDate" class="form-control" @bind-Value="model.AcquisitionDate" />
+                                <ValidationMessage For="() => model.AcquisitionDate" />
+                            </div>
+
+                            <div class="alert alert-info" role="alert">
+                                <i class="bi bi-info-circle"></i> Custom attributes will be available in a future update.
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary" disabled="@isSaving">
+                                    @if (isSaving)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    }
+                                    @(IsEditMode ? "Update" : "Create")
+                                </button>
+                                <a href="/collections/@CollectionId" class="btn btn-secondary">Cancel</a>
+                            </div>
+                        </EditForm>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Guid CollectionId { get; set; }
+
+    [Parameter]
+    public Guid? ItemId { get; set; }
+
+    private bool IsEditMode => ItemId.HasValue;
+    private ItemFormModel model = new();
+    private bool isLoading = false;
+    private bool isSaving = false;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (IsEditMode)
+        {
+            await LoadItem();
+        }
+    }
+
+    private async Task LoadItem()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var item = await ItemService.GetItemAsync(CollectionId, ItemId!.Value);
+
+            if (item == null)
+            {
+                errorMessage = "Item not found.";
+                return;
+            }
+
+            model.Name = item.Name;
+            model.Notes = item.Notes;
+            model.AcquisitionDate = item.AcquisitionDate?.DateTime;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load item: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        errorMessage = null;
+        isSaving = true;
+
+        try
+        {
+            // For now, use empty attributes dictionary
+            var attributes = new Dictionary<string, object>();
+
+            if (IsEditMode)
+            {
+                var request = new UpdateItemRequest(
+                    model.Name,
+                    model.Notes,
+                    attributes,
+                    model.AcquisitionDate.HasValue ? new DateTimeOffset(model.AcquisitionDate.Value, TimeSpan.Zero) : null
+                );
+
+                var success = await ItemService.UpdateItemAsync(CollectionId, ItemId!.Value, request);
+
+                if (success)
+                {
+                    Navigation.NavigateTo($"/collections/{CollectionId}");
+                }
+                else
+                {
+                    errorMessage = "Failed to update item. Please try again.";
+                }
+            }
+            else
+            {
+                var request = new CreateItemRequest(
+                    model.Name,
+                    model.Notes,
+                    attributes,
+                    model.AcquisitionDate.HasValue ? new DateTimeOffset(model.AcquisitionDate.Value, TimeSpan.Zero) : null
+                );
+
+                var result = await ItemService.CreateItemAsync(CollectionId, request);
+
+                if (result != null)
+                {
+                    Navigation.NavigateTo($"/collections/{CollectionId}");
+                }
+                else
+                {
+                    errorMessage = "Failed to create item. Please try again.";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private class ItemFormModel
+    {
+        [Required(ErrorMessage = "Item name is required")]
+        [StringLength(200, MinimumLength = 1, ErrorMessage = "Name must be between 1 and 200 characters")]
+        public string Name { get; set; } = "";
+
+        [StringLength(2000, ErrorMessage = "Notes cannot exceed 2000 characters")]
+        public string? Notes { get; set; }
+
+        public DateTime? AcquisitionDate { get; set; }
+    }
+}

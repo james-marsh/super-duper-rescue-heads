@@ -43,7 +43,8 @@
       "Bash(gh pr view:*)",
       "Bash(git branch:*)",
       "Bash(SPECIFY_FEATURE=\"007-group-sharing\" pwsh:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(taskkill:*)"
     ],
     "deny": [],
     "ask": []

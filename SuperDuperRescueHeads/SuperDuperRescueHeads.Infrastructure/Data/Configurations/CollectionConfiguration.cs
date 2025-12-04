@@ -31,6 +31,15 @@ public class CollectionConfiguration : IEntityTypeConfiguration<Collection>
             .HasMaxLength(200)
             .IsRequired();
 
+        // Configure ItemType value object
+        builder.Property(c => c.ItemType)
+            .HasConversion(
+                itemType => itemType.Value,
+                value => ItemType.Create(value))
+            .HasColumnName("ItemType")
+            .HasMaxLength(50)
+            .IsRequired();
+
         builder.Property(c => c.Description)
             .HasMaxLength(2000);
 
@@ -62,6 +71,12 @@ public class CollectionConfiguration : IEntityTypeConfiguration<Collection>
         builder.HasIndex(c => new { c.OwnerId, c.IsDeleted })
             .HasFilter("[IsDeleted] = 0")
             .HasDatabaseName("IX_Collections_OwnerId_IsDeleted");
+
+        // Unique constraint: One user cannot have duplicate collection names (for non-deleted collections)
+        builder.HasIndex(c => new { c.OwnerId, c.Name })
+            .IsUnique()
+            .HasFilter("[IsDeleted] = 0")
+            .HasDatabaseName("IX_Collections_OwnerId_Name_Unique");
 
         // Soft delete query filter
         builder.HasQueryFilter(c => !c.IsDeleted);

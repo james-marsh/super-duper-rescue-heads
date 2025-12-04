@@ -44,6 +44,9 @@ builder.Services.AddHttpClient("ApiClient", client =>
 // Register collection service
 builder.Services.AddScoped<ICollectionService, CollectionService>();
 
+// Register item service
+builder.Services.AddScoped<IItemService, ItemService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
