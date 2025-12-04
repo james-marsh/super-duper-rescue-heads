@@ -5,6 +5,8 @@
     <ProjectReference Include="..\SuperDuperRescueHeads.ServiceDefaults\SuperDuperRescueHeads.ServiceDefaults.csproj" />
   </ItemGroup>
 
+  <!-- No explicit package references needed - all are provided by .NET 10 SDK -->
+
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>

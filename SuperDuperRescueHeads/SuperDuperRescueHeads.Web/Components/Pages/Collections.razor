@@ -1,0 +1,180 @@
+@page "/collections"
+@rendermode InteractiveServer
+@using SuperDuperRescueHeads.Web.Services
+@inject ICollectionService CollectionService
+@inject NavigationManager Navigation
+@attribute [Authorize]
+
+<PageTitle>My Collections</PageTitle>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>My Collections</h2>
+        <a href="/collections/create" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Create Collection
+        </a>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading collections...</p>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger" role="alert">
+            @errorMessage
+        </div>
+    }
+    else if (collections.Count == 0)
+    {
+        <div class="alert alert-info" role="alert">
+            <h5 class="alert-heading">No collections yet</h5>
+            <p>You haven't created any collections. Click "Create Collection" to get started!</p>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var collection in collections)
+            {
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">@collection.Name</h5>
+                            @if (!string.IsNullOrEmpty(collection.Description))
+                            {
+                                <p class="card-text text-muted">@collection.Description</p>
+                            }
+                            <p class="card-text">
+                                <small class="text-muted">
+                                    <i class="bi bi-box-seam"></i> @collection.ItemCount item(s)
+                                </small>
+                            </p>
+                            <p class="card-text">
+                                <small class="text-muted">Created: @collection.CreatedAt.ToLocalTime().ToString("MMM dd, yyyy")</small>
+                            </p>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <div class="btn-group w-100" role="group">
+                                <a href="/collections/@collection.CollectionId" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                                <a href="/collections/@collection.CollectionId/edit" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </a>
+                                <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDelete(collection)">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@if (collectionToDelete != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Delete</h5>
+                    <button type="button" class="btn-close" @onclick="CancelDelete"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete the collection "<strong>@collectionToDelete.Name</strong>"?</p>
+                    <p class="text-danger">This action cannot be undone. All items in this collection will also be deleted.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CancelDelete">Cancel</button>
+                    <button type="button" class="btn btn-danger" @onclick="DeleteCollection" disabled="@isDeleting">
+                        @if (isDeleting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        }
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<CollectionDto> collections = new();
+    private bool isLoading = true;
+    private bool isDeleting = false;
+    private string? errorMessage;
+    private CollectionDto? collectionToDelete;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCollections();
+    }
+
+    private async Task LoadCollections()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            collections = await CollectionService.GetCollectionsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load collections: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ConfirmDelete(CollectionDto collection)
+    {
+        collectionToDelete = collection;
+    }
+
+    private void CancelDelete()
+    {
+        collectionToDelete = null;
+    }
+
+    private async Task DeleteCollection()
+    {
+        if (collectionToDelete == null) return;
+
+        isDeleting = true;
+
+        try
+        {
+            var success = await CollectionService.DeleteCollectionAsync(collectionToDelete.CollectionId);
+
+            if (success)
+            {
+                collections.Remove(collectionToDelete);
+                collectionToDelete = null;
+            }
+            else
+            {
+                errorMessage = "Failed to delete collection. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error deleting collection: {ex.Message}";
+        }
+        finally
+        {
+            isDeleting = false;
+        }
+    }
+}

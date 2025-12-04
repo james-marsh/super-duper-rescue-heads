@@ -1,0 +1,138 @@
+@page "/register"
+@rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
+@using SuperDuperRescueHeads.Web.Services
+@inject IAuthenticationService AuthService
+@inject CustomAuthStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Register - SuperDuperRescueHeads</PageTitle>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card mt-5">
+                <div class="card-body">
+                    <h3 class="card-title text-center mb-4">Create Account</h3>
+
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            @errorMessage
+                        </div>
+                    }
+
+                    <EditForm Model="registerModel" OnValidSubmit="HandleRegister">
+                        <DataAnnotationsValidator />
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <InputText id="email" class="form-control" @bind-Value="registerModel.Email" />
+                            <ValidationMessage For="() => registerModel.Email" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="displayName" class="form-label">Display Name</label>
+                            <InputText id="displayName" class="form-control" @bind-Value="registerModel.DisplayName" />
+                            <ValidationMessage For="() => registerModel.DisplayName" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <InputText id="password" type="password" class="form-control" @bind-Value="registerModel.Password" />
+                            <ValidationMessage For="() => registerModel.Password" />
+                            <small class="form-text text-muted">
+                                Must be at least 8 characters with uppercase, lowercase, digit, and special character.
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="confirmPassword" class="form-label">Confirm Password</label>
+                            <InputText id="confirmPassword" type="password" class="form-control" @bind-Value="registerModel.ConfirmPassword" />
+                            <ValidationMessage For="() => registerModel.ConfirmPassword" />
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100" disabled="@isLoading">
+                            @if (isLoading)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            }
+                            Register
+                        </button>
+                    </EditForm>
+
+                    <div class="mt-3 text-center">
+                        <p>Already have an account? <a href="/login">Login</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private RegisterModel registerModel = new();
+    private string? errorMessage;
+    private bool isLoading;
+
+    private async Task HandleRegister()
+    {
+        errorMessage = null;
+        isLoading = true;
+
+        try
+        {
+            if (registerModel.Password != registerModel.ConfirmPassword)
+            {
+                errorMessage = "Passwords do not match.";
+                return;
+            }
+
+            var request = new RegisterRequest(
+                registerModel.Email,
+                registerModel.DisplayName,
+                registerModel.Password
+            );
+
+            var response = await AuthService.RegisterAsync(request);
+
+            if (response != null)
+            {
+                var userInfo = new UserInfo(response.UserId, response.Email, response.DisplayName, true);
+                AuthStateProvider.NotifyUserAuthentication(userInfo);
+                Navigation.NavigateTo("/");
+            }
+            else
+            {
+                errorMessage = "Registration failed. Please check your information and try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private class RegisterModel
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = "";
+
+        [Required]
+        [StringLength(100, MinimumLength = 2)]
+        public string DisplayName { get; set; } = "";
+
+        [Required]
+        [StringLength(100, MinimumLength = 8)]
+        public string Password { get; set; } = "";
+
+        [Required]
+        [Compare(nameof(Password), ErrorMessage = "Passwords do not match.")]
+        public string ConfirmPassword { get; set; } = "";
+    }
+}
