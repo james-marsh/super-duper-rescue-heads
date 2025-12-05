@@ -46,6 +46,11 @@ public interface ICollectionRepository
     Task<bool> ExistsAsync(Guid collectionId, CancellationToken ct = default);
 
     /// <summary>
+    /// Counts the number of collections for a specific owner (excluding soft-deleted)
+    /// </summary>
+    Task<int> CountByOwnerIdAsync(Guid ownerId, CancellationToken ct = default);
+
+    /// <summary>
     /// Counts items in a collection
     /// </summary>
     Task<int> CountItemsAsync(Guid collectionId, CancellationToken ct = default);

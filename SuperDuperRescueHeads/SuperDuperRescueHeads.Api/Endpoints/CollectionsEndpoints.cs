@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using SuperDuperRescueHeads.Api.Configuration;
 using SuperDuperRescueHeads.Api.Models;
 using SuperDuperRescueHeads.Api.Services;
 using SuperDuperRescueHeads.Domain.Collections;
@@ -46,9 +48,18 @@ public static class CollectionsEndpoints
             CreateCollectionRequest request,
             ICollectionRepository repository,
             ICurrentUserService currentUserService,
+            IOptions<CollectionLimitsOptions> limitsOptions,
             CancellationToken cancellationToken) =>
         {
             var userId = currentUserService.GetUserId();
+
+            // Check collection limit
+            var currentCount = await repository.CountByOwnerIdAsync(userId, cancellationToken);
+            var maxAllowed = limitsOptions.Value.MaxCollectionsPerUser;
+
+            if (currentCount >= maxAllowed)
+                throw new ConflictException("Collection",
+                    $"Cannot create collection. Maximum limit of {maxAllowed} collections reached (current: {currentCount}).");
 
             var collectionName = CollectionName.Create(request.Name);
             var itemType = ItemType.Create(request.ItemType);

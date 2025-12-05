@@ -73,6 +73,13 @@ public class CollectionRepository : ICollectionRepository
             .AnyAsync(c => c.CollectionId == collectionId, ct);
     }
 
+    public async Task<int> CountByOwnerIdAsync(Guid ownerId, CancellationToken ct = default)
+    {
+        return await _context.Collections
+            .Where(c => c.OwnerId == ownerId)
+            .CountAsync(ct);
+    }
+
     public async Task<int> CountItemsAsync(Guid collectionId, CancellationToken ct = default)
     {
         return await _context.Items
