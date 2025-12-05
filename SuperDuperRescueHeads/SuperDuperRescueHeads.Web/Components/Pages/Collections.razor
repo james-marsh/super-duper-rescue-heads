@@ -46,6 +46,9 @@
                     <div class="card h-100">
                         <div class="card-body">
                             <h5 class="card-title">@collection.Name</h5>
+                            <p class="card-text">
+                                <span class="badge bg-primary">@collection.ItemType</span>
+                            </p>
                             @if (!string.IsNullOrEmpty(collection.Description))
                             {
                                 <p class="card-text text-muted">@collection.Description</p>

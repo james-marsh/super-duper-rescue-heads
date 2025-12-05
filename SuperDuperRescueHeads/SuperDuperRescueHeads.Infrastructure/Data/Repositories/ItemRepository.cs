@@ -41,8 +41,11 @@ public class ItemRepository : IItemRepository
 
     public async Task<int> CountByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        // Placeholder: Requires Collection navigation property from Feature 001
-        throw new NotImplementedException("Requires Collection navigation property from Feature 001");
+        // Count all items owned by a user through their collections
+        return await _context.Items
+            .Include(i => i.Collection)
+            .Where(i => i.Collection.OwnerId == userId)
+            .CountAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<Item>> GetByCollectionIdPagedAsync(

@@ -29,6 +29,7 @@ public static class CollectionsEndpoints
                 CollectionId = c.CollectionId,
                 OwnerId = c.OwnerId,
                 Name = c.Name.Value,
+                ItemType = c.ItemType.Value,
                 Description = c.Description,
                 CreatedAt = c.CreatedAt,
                 UpdatedAt = c.UpdatedAt,
@@ -50,7 +51,8 @@ public static class CollectionsEndpoints
             var userId = currentUserService.GetUserId();
 
             var collectionName = CollectionName.Create(request.Name);
-            var collection = Collection.Create(userId, collectionName, request.Description);
+            var itemType = ItemType.Create(request.ItemType);
+            var collection = Collection.Create(userId, collectionName, itemType, request.Description);
 
             await repository.AddAsync(collection, cancellationToken);
             await repository.SaveChangesAsync(cancellationToken);
@@ -60,6 +62,7 @@ public static class CollectionsEndpoints
                 CollectionId = collection.CollectionId,
                 OwnerId = collection.OwnerId,
                 Name = collection.Name.Value,
+                ItemType = collection.ItemType.Value,
                 Description = collection.Description,
                 CreatedAt = collection.CreatedAt,
                 UpdatedAt = collection.UpdatedAt,
@@ -94,6 +97,7 @@ public static class CollectionsEndpoints
                 CollectionId = collection.CollectionId,
                 OwnerId = collection.OwnerId,
                 Name = collection.Name.Value,
+                ItemType = collection.ItemType.Value,
                 Description = collection.Description,
                 CreatedAt = collection.CreatedAt,
                 UpdatedAt = collection.UpdatedAt,
@@ -138,6 +142,7 @@ public static class CollectionsEndpoints
                     CollectionId = collection.CollectionId,
                     OwnerId = collection.OwnerId,
                     Name = collection.Name.Value,
+                    ItemType = collection.ItemType.Value,
                     Description = collection.Description,
                     CreatedAt = collection.CreatedAt,
                     UpdatedAt = collection.UpdatedAt,
