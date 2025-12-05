@@ -33,6 +33,10 @@ builder.Services.AddOpenApi();
 builder.Services.AddMemoryCache(); // Feature 007: For caching group memberships
 builder.Services.AddSignalR(); // Feature 008: Real-time notifications
 
+// Configuration Options
+builder.Services.Configure<SuperDuperRescueHeads.Api.Configuration.CollectionLimitsOptions>(
+    builder.Configuration.GetSection(SuperDuperRescueHeads.Api.Configuration.CollectionLimitsOptions.SectionName));
+
 // Database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? "Server=(localdb)\\mssqllocaldb;Database=SuperDuperRescueHeads;Trusted_Connection=true;MultipleActiveResultSets=true";
