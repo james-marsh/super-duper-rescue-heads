@@ -50,6 +50,11 @@ public static class CollectionsEndpoints
         {
             var userId = currentUserService.GetUserId();
 
+            // Check for duplicate collection name (case-insensitive)
+            var isDuplicate = await repository.ExistsByNameAndOwnerAsync(request.Name, userId, cancellationToken);
+            if (isDuplicate)
+                throw new ConflictException("Collection", "A collection with this name already exists");
+
             var collectionName = CollectionName.Create(request.Name);
             var itemType = ItemType.Create(request.ItemType);
             var collection = Collection.Create(userId, collectionName, itemType, request.Description);
@@ -127,6 +132,11 @@ public static class CollectionsEndpoints
             // Authorization: Only owner can update
             if (!collection.IsOwnedBy(userId))
                 throw new UnauthorizedException("collection", "update");
+
+            // Check for duplicate collection name (case-insensitive), excluding current collection
+            var isDuplicate = await repository.ExistsByNameAndOwnerAsync(request.Name, userId, collectionId, cancellationToken);
+            if (isDuplicate)
+                throw new ConflictException("Collection", "A collection with this name already exists");
 
             try
             {
