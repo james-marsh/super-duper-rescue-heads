@@ -46,6 +46,16 @@ public interface ICollectionRepository
     Task<bool> ExistsAsync(Guid collectionId, CancellationToken ct = default);
 
     /// <summary>
+    /// Checks if a collection with the given name already exists for the owner (case-insensitive, excluding soft-deleted)
+    /// </summary>
+    Task<bool> ExistsByNameAndOwnerAsync(string name, Guid ownerId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Checks if a collection with the given name already exists for the owner, excluding a specific collection (case-insensitive, excluding soft-deleted)
+    /// </summary>
+    Task<bool> ExistsByNameAndOwnerAsync(string name, Guid ownerId, Guid excludeCollectionId, CancellationToken ct = default);
+
+    /// <summary>
     /// Counts items in a collection
     /// </summary>
     Task<int> CountItemsAsync(Guid collectionId, CancellationToken ct = default);

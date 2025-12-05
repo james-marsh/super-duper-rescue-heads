@@ -73,6 +73,21 @@ public class CollectionRepository : ICollectionRepository
             .AnyAsync(c => c.CollectionId == collectionId, ct);
     }
 
+    public async Task<bool> ExistsByNameAndOwnerAsync(string name, Guid ownerId, CancellationToken ct = default)
+    {
+        return await _context.Collections
+            .AnyAsync(c => c.OwnerId == ownerId &&
+                          EF.Functions.Like(c.Name.Value, name), ct);
+    }
+
+    public async Task<bool> ExistsByNameAndOwnerAsync(string name, Guid ownerId, Guid excludeCollectionId, CancellationToken ct = default)
+    {
+        return await _context.Collections
+            .AnyAsync(c => c.OwnerId == ownerId &&
+                          c.CollectionId != excludeCollectionId &&
+                          EF.Functions.Like(c.Name.Value, name), ct);
+    }
+
     public async Task<int> CountItemsAsync(Guid collectionId, CancellationToken ct = default)
     {
         return await _context.Items
