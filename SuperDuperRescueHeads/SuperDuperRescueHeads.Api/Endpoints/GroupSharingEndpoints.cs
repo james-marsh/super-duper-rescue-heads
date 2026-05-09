@@ -75,7 +75,7 @@ public static class GroupSharingEndpoints
             });
         })
         .WithName("ShareCollectionWithGroup")
-        .WithOpenApi();
+;
 
         // GET /api/v1/groups
         group.MapGet("/groups", async (
@@ -102,7 +102,7 @@ public static class GroupSharingEndpoints
             return Results.Ok(new { data = responses });
         })
         .WithName("ListUserGroups")
-        .WithOpenApi();
+;
 
         // GET /api/v1/collections/{collectionId}/shares/groups
         group.MapGet("/collections/{collectionId:guid}/shares/groups", async (
@@ -153,7 +153,7 @@ public static class GroupSharingEndpoints
             return Results.Ok(new { data = responses });
         })
         .WithName("ListGroupShares")
-        .WithOpenApi();
+;
 
         // PATCH /api/v1/collections/{collectionId}/shares/group/{groupId}/permission - US3
         group.MapPatch("/collections/{collectionId:guid}/shares/group/{groupId:guid}/permission", async (
@@ -193,7 +193,7 @@ public static class GroupSharingEndpoints
             return Results.Ok(new { message = "Permission updated successfully" });
         })
         .WithName("ChangeGroupPermission")
-        .WithOpenApi();
+;
 
         // DELETE /api/v1/collections/{collectionId}/shares/group/{groupId} - US3
         group.MapDelete("/collections/{collectionId:guid}/shares/group/{groupId:guid}", async (
@@ -231,7 +231,7 @@ public static class GroupSharingEndpoints
             return Results.NoContent();
         })
         .WithName("RevokeGroupAccess")
-        .WithOpenApi();
+;
 
         // GET /api/v1/collections/{collectionId}/access-sources - US3
         group.MapGet("/collections/{collectionId:guid}/access-sources", async (
@@ -303,7 +303,7 @@ public static class GroupSharingEndpoints
             });
         })
         .WithName("GetAccessSources")
-        .WithOpenApi();
+;
 
         return app;
     }

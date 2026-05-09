@@ -59,7 +59,6 @@ public static class SearchEndpoints
             }
         })
         .WithName("SearchItems")
-        .WithOpenApi()
         .Produces<SearchResultPage>()
         .ProducesProblem(400)
         .ProducesProblem(401);
@@ -90,7 +89,6 @@ public static class SearchEndpoints
             return Results.Ok(new { suggestions });
         })
         .WithName("GetSearchSuggestions")
-        .WithOpenApi()
         .Produces<object>()
         .ProducesProblem(400)
         .ProducesProblem(401);
@@ -107,7 +105,6 @@ public static class SearchEndpoints
             return Results.Ok(new { recentSearches });
         })
         .WithName("GetRecentSearches")
-        .WithOpenApi()
         .Produces<object>()
         .ProducesProblem(401);
 

@@ -83,7 +83,7 @@ public static class CollectionSharingEndpoints
             });
         })
         .WithName("ShareCollection")
-        .WithOpenApi();
+;
 
         // GET /api/v1/invitations/pending
         group.MapGet("/invitations/pending", async (
@@ -110,7 +110,7 @@ public static class CollectionSharingEndpoints
             return Results.Ok(new { data = responses });
         })
         .WithName("GetPendingInvitations")
-        .WithOpenApi();
+;
 
         // POST /api/v1/invitations/{token}/accept
         group.MapPost("/invitations/{token}/accept", async (
@@ -157,7 +157,7 @@ public static class CollectionSharingEndpoints
             }
         })
         .WithName("AcceptInvitation")
-        .WithOpenApi();
+;
 
         // POST /api/v1/invitations/{token}/decline
         group.MapPost("/invitations/{token}/decline", async (
@@ -195,7 +195,7 @@ public static class CollectionSharingEndpoints
             }
         })
         .WithName("DeclineInvitation")
-        .WithOpenApi();
+;
 
         // DELETE /api/v1/collections/{collectionId}/collaborators/{userId}
         group.MapDelete("/collections/{collectionId:guid}/collaborators/{userId:guid}", async (
@@ -241,7 +241,7 @@ public static class CollectionSharingEndpoints
             return Results.NoContent();
         })
         .WithName("RemoveCollaborator")
-        .WithOpenApi();
+;
 
         // PATCH /api/v1/collections/{collectionId}/collaborators/{userId}/permission
         group.MapPatch("/collections/{collectionId:guid}/collaborators/{userId:guid}/permission", async (
@@ -306,7 +306,7 @@ public static class CollectionSharingEndpoints
             }
         })
         .WithName("ChangeCollaboratorPermission")
-        .WithOpenApi();
+;
 
         // GET /api/v1/collections/{collectionId}/collaborators
         group.MapGet("/collections/{collectionId:guid}/collaborators", async (
@@ -334,7 +334,7 @@ public static class CollectionSharingEndpoints
             return Results.Ok(new { data = responses });
         })
         .WithName("ListCollaborators")
-        .WithOpenApi();
+;
 
         return app;
     }

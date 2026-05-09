@@ -39,7 +39,7 @@ public static class CollectionsEndpoints
             return Results.Ok(response);
         })
         .WithName("ListCollections")
-        .WithOpenApi();
+;
 
         // POST /api/v1/collections - Create a new collection
         group.MapPost("", async (
@@ -77,7 +77,7 @@ public static class CollectionsEndpoints
             return Results.Created($"/api/v1/collections/{collection.CollectionId}", response);
         })
         .WithName("CreateCollection")
-        .WithOpenApi();
+;
 
         // GET /api/v1/collections/{collectionId} - Get a specific collection
         group.MapGet("{collectionId:guid}", async (
@@ -112,7 +112,7 @@ public static class CollectionsEndpoints
             return Results.Ok(response);
         })
         .WithName("GetCollection")
-        .WithOpenApi();
+;
 
         // PUT /api/v1/collections/{collectionId} - Update a collection
         group.MapPut("{collectionId:guid}", async (
@@ -167,7 +167,7 @@ public static class CollectionsEndpoints
             }
         })
         .WithName("UpdateCollection")
-        .WithOpenApi();
+;
 
         // DELETE /api/v1/collections/{collectionId} - Soft delete a collection
         group.MapDelete("{collectionId:guid}", async (
@@ -201,7 +201,7 @@ public static class CollectionsEndpoints
             }
         })
         .WithName("DeleteCollection")
-        .WithOpenApi();
+;
 
         return app;
     }

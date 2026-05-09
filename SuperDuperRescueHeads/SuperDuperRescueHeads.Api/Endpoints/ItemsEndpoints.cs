@@ -69,7 +69,7 @@ public static class ItemsEndpoints
             });
         })
         .WithName("ListItems")
-        .WithOpenApi();
+;
 
         // POST /api/v1/collections/{collectionId}/items
         group.MapPost("/collections/{collectionId:guid}/items", async (
@@ -117,7 +117,7 @@ public static class ItemsEndpoints
             return Results.Created($"/api/v1/items/{item.ItemId}", response);
         })
         .WithName("CreateItem")
-        .WithOpenApi();
+;
 
         // GET /api/v1/items/{itemId}
         group.MapGet("/items/{itemId:guid}", async (
@@ -156,7 +156,7 @@ public static class ItemsEndpoints
             return Results.Ok(response);
         })
         .WithName("GetItem")
-        .WithOpenApi();
+;
 
         // PUT /api/v1/items/{itemId}
         group.MapPut("/items/{itemId:guid}", async (
@@ -213,7 +213,7 @@ public static class ItemsEndpoints
             }
         })
         .WithName("UpdateItem")
-        .WithOpenApi();
+;
 
         // DELETE /api/v1/items/{itemId}
         group.MapDelete("/items/{itemId:guid}", async (
@@ -251,7 +251,7 @@ public static class ItemsEndpoints
             }
         })
         .WithName("DeleteItem")
-        .WithOpenApi();
+;
 
         return app;
     }

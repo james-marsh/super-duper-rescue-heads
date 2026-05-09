@@ -97,8 +97,7 @@ public static class GroupMembershipWebhookEndpoint
                 return Results.Problem("Error processing webhook");
             }
         })
-        .WithName("GroupMembershipWebhook")
-        .WithOpenApi();
+        .WithName("GroupMembershipWebhook");
 
         return app;
     }
