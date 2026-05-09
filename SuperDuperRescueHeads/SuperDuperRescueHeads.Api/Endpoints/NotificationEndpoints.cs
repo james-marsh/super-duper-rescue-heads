@@ -35,7 +35,7 @@ public static class NotificationEndpoints
             })});
         })
         .WithName("GetUnreadNotifications")
-        .WithOpenApi();
+;
 
         // GET /api/v1/notifications - Get notification history with pagination
         group.MapGet("", async (
@@ -75,7 +75,7 @@ public static class NotificationEndpoints
             });
         })
         .WithName("GetNotificationHistory")
-        .WithOpenApi();
+;
 
         // PATCH /api/v1/notifications/{id}/read - Mark notification as read
         group.MapPatch("/{id:guid}/read", async (
@@ -91,7 +91,7 @@ public static class NotificationEndpoints
             return Results.Ok(new { message = "Notification marked as read" });
         })
         .WithName("MarkNotificationAsRead")
-        .WithOpenApi();
+;
 
         // POST /api/v1/notifications/mark-all-read - Mark all notifications as read
         group.MapPost("/mark-all-read", async (
@@ -106,7 +106,7 @@ public static class NotificationEndpoints
             return Results.Ok(new { message = "All notifications marked as read" });
         })
         .WithName("MarkAllNotificationsAsRead")
-        .WithOpenApi();
+;
 
         // DELETE /api/v1/notifications/{id} - Dismiss notification
         group.MapDelete("/{id:guid}", async (
@@ -122,7 +122,7 @@ public static class NotificationEndpoints
             return Results.NoContent();
         })
         .WithName("DismissNotification")
-        .WithOpenApi();
+;
 
         return app;
     }

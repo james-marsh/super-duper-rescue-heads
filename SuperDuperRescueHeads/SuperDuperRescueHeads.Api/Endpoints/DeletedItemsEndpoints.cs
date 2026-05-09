@@ -41,7 +41,7 @@ public static class DeletedItemsEndpoints
         .WithName("GetDeletedItems")
         .WithSummary("Get all deleted items for the authenticated user")
         .WithDescription("Returns a list of items that have been soft-deleted within the last 30 days")
-        .WithOpenApi();
+;
 
         // POST /api/v1/deleted-items/{itemId}/restore
         // User Story 3: Restore Deleted Items
@@ -89,7 +89,7 @@ public static class DeletedItemsEndpoints
         .WithName("RestoreDeletedItem")
         .WithSummary("Restore a deleted item")
         .WithDescription("Restores a soft-deleted item, making it visible again in the collection")
-        .WithOpenApi();
+;
 
         // POST /api/v1/deleted-items/{itemId}/purge
         // User Story 4: Permanent Delete
@@ -124,7 +124,7 @@ public static class DeletedItemsEndpoints
         .WithName("PurgeDeletedItem")
         .WithSummary("Permanently delete an item")
         .WithDescription("Permanently removes a soft-deleted item from the database. This action cannot be undone.")
-        .WithOpenApi();
+;
 
         return app;
     }
