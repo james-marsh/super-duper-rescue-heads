@@ -1,14 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Aspire.AppHost.Sdk/13.3.0">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <UserSecretsId>f74c2a8d-0bbe-4a50-a9dd-54e3a775103f</UserSecretsId>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.AppHost" Version="9.0.0" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\SuperDuperRescueHeads.Api\SuperDuperRescueHeads.Api.csproj" />

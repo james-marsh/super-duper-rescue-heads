@@ -19,7 +19,7 @@ public class Item
     public DateTimeOffset? DeletedAt { get; private set; }
 
     // Optimistic Concurrency Control (Feature 009)
-    public byte[] RowVersion { get; private set; } = null!;
+    public byte[] RowVersion { get; private set; } = [];
 
     // Navigation properties (EF Core)
     public Collection Collection { get; private set; } = null!;

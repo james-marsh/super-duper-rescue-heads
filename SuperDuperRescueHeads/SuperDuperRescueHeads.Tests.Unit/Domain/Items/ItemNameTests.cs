@@ -30,7 +30,7 @@ public class ItemNameTests
         // Act & Assert
         await Assert.That(() => ItemName.Create(invalidName!))
             .Throws<ArgumentException>()
-            .WithMessage("Item name cannot be empty*");
+            .WithMessageMatching("Item name cannot be empty*");
     }
 
     [Test]
@@ -42,7 +42,7 @@ public class ItemNameTests
         // Act & Assert
         await Assert.That(() => ItemName.Create(longName))
             .Throws<ArgumentException>()
-            .WithMessage("Item name cannot exceed 200 characters*");
+            .WithMessageMatching("Item name cannot exceed 200 characters*");
     }
 
     [Test]
